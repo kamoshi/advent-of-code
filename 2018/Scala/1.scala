@@ -9,8 +9,6 @@ val result1 = lines.foldLeft (0) { (acc, i) => acc + Integer.parseInt(i) }
 println(result1)
 
 // Solution 2
-val hash = new mutable.HashSet[Int]()
-
 def toLazyLoop[A](list: List[A]): LazyList[A] = {
   def toLazy[A](list: List[A]): LazyList[A] = {
     list match {
@@ -21,11 +19,12 @@ def toLazyLoop[A](list: List[A]): LazyList[A] = {
   toLazy(list) #::: toLazyLoop(list)
 }
 
-def findFirstRepeat[A](lazylist:LazyList[String], acc:Int, hash:mutable.HashSet[Int]):Int =
+val hash = new mutable.HashSet[Int]()
+def findFirstRepeat[A](lazylist:LazyList[String], acc:Int):Int =
   if (!hash.add(acc)) acc
   else lazylist match {
-    case hd #:: tl => findFirstRepeat(tl, (acc + hd.toInt), hash)
+    case hd #:: tl => findFirstRepeat(tl, (acc + hd.toInt))
   }
 
-val result2 = findFirstRepeat(toLazyLoop(lines), 0, hash)
+val result2 = findFirstRepeat(toLazyLoop(lines), 0)
 println("First repeat frequency: " + result2)
