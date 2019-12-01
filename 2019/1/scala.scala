@@ -2,7 +2,7 @@ import scala.io.Source
 val lines = Source.fromFile(getClass.getResource("/input1.txt").getFile).getLines().toList
 
 // 1
-val result1 = lines.foldLeft (0) { (acc, i) => acc + (Integer.parseInt(i)/3-2)}
+val result1 = lines.foldLeft (0) { (acc, i) => acc + (i.toInt/3-2)}
 println(result1)
 
 // 2
@@ -14,5 +14,5 @@ def findRecursiveFuel(fuel:Int, acc:Int):Int =
   else findRecursiveFuel(nextFuel, nextFuel+acc)
 }
 
-val result2 = lines.foldLeft (0) { (acc, i) => acc + findRecursiveFuel(Integer.parseInt(i), 0)}
+val result2 = lines.foldLeft (0) { (acc, i) => acc + findRecursiveFuel(i.toInt, 0)}
 println(result2)
