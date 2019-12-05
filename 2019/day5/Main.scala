@@ -1,6 +1,6 @@
 package day5
 
-import day5.opcode.{Action, Jump, OpCode1, OpCode2, OpCode99}
+import day5.opcode.{Action, Jump, OpCode99}
 
 import scala.io.Source
 
@@ -11,7 +11,7 @@ object Main {
   def opCodeRunner(tape: Array[Int], nextPtr: Int): Boolean =
   {
     //println("=======\nParsing at "+nextPtr+": ["+tape(nextPtr)+", "+tape(nextPtr+1)+", "+tape(nextPtr+2)+", "+tape(nextPtr+3)+ "]");
-    val tuple = OpCode1.parseInt(tape(nextPtr));
+    val tuple = OpCode99.parseInt(tape(nextPtr));
     //println("Executing: " + tuple)
     tuple match
     {
