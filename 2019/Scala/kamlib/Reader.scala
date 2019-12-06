@@ -8,7 +8,7 @@ object Reader {
   /** Read file with the name specified in parameter */
   def readList(filename: String): List[String] =
   {
-    val src = Source.fromFile(getClass.getResource("/input1.txt").getFile)
+    val src = Source.fromFile(getClass.getResource(filename).getFile)
     val list = src.getLines().toList
     src.close()
     list
@@ -17,7 +17,7 @@ object Reader {
   /** Read file with the name specified in parameter */
   def readArray(filename: String): Array[String] =
   {
-    val src = Source.fromFile(getClass.getResource("/input1.txt").getFile)
+    val src = Source.fromFile(getClass.getResource(filename).getFile)
     val array = src.getLines().toArray
     src.close()
     array
@@ -26,7 +26,7 @@ object Reader {
   /** Read file with the name specified in parameter */
   def readString(filename: String): String =
   {
-    val src = Source.fromFile(getClass.getResource("/input1.txt").getFile)
+    val src = Source.fromFile(getClass.getResource(filename).getFile)
     val string = src.getLines().mkString
     src.close()
     string
