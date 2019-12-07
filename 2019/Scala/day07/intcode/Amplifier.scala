@@ -27,8 +27,8 @@ class Amplifier(input: Array[Int])
       case (_, _, _, OpCode99) =>
         halted = true
         this
-      case (_, _, m1, outputInstr: Output) => this
-      case (_, _, m1, inputInstr: Input) => this
+      case (_, _, _, outputInstr: Output) => this
+      case (_, _, _, inputInstr: Input) => this
       case (m3, m2, m1, instruction: Jump) =>
         val (bool, jmpPtr) = instruction.checkConditionAndJump(software, software(pointer+1), software(pointer+2), software(pointer+3), m1, m2, m3)
         if (bool) pointer = jmpPtr
@@ -51,9 +51,9 @@ class Amplifier(input: Array[Int])
       case (_, _, m1, inputInstr: Input) =>
         inputInstr.input(software, software(pointer+1), m1, input)
         pointer += inputInstr.length
+        this
       case _ => throw new Exception("Unexpected instruction")
     }
-    this
   }
 
   def runOutput(): Int =
