@@ -2,50 +2,40 @@ package day07.intcode
 
 class Solver(software: Array[Int])
 {
+  /** Array containing the amplifiers */
   val amps: Array[Amplifier] = Array(new Amplifier(software), new Amplifier(software), new Amplifier(software), new Amplifier(software), new Amplifier(software))
 
+  /** Reset the amplifiers to the original state */
   def reset(): Unit =
     amps.foreach(_.reset())
 
+  /** Inserts phases AKA the first inputs into amplifiers */
   def setupPhases(phases: Array[Int]): Unit =
   {
     amps.foreach(_.runUntilIO())
-    amps(0).runInput(phases(0))
-    amps(1).runInput(phases(1))
-    amps(2).runInput(phases(2))
-    amps(3).runInput(phases(3))
-    amps(4).runInput(phases(4))
+    for (i <- amps.indices)
+    {
+      amps(i).runInput(phases(i))
+    }
   }
 
-  def solveSequence(lastOutput: Int = 0): Int =
-  {
-    val res0 = amps(0).runUntilIO().runInput(lastOutput).runUntilIO().runOutput()
-    val res1 = amps(1).runUntilIO().runInput(res0).runUntilIO().runOutput()
-    val res2 = amps(2).runUntilIO().runInput(res1).runUntilIO().runOutput()
-    val res3 = amps(3).runUntilIO().runInput(res2).runUntilIO().runOutput()
-    val res4 = amps(4).runUntilIO().runInput(res3).runUntilIO().runOutput()
-    res4
-  }
-
+  /** Solves the single run */
   def solveSequenceSingleRun(phases: Array[Int]): Int =
   {
     reset()
     setupPhases(phases)
-    solveSequence()
+    amps.foldLeft(0){ (input, amp) => amp.runUntilIO().runInput(input).runUntilIO().runOutput() }
   }
 
   @scala.annotation.tailrec
-  final def solveSequenceFeedback(lastOutput: Int = 0): Int =
+  private[this] final def solveSequenceFeedback(lastOutput: Int = 0): Int =
   {
-    val res0 = amps(0).runUntilIO().runInput(lastOutput).runUntilIO().runOutput()
-    val res1 = amps(1).runUntilIO().runInput(res0).runUntilIO().runOutput()
-    val res2 = amps(2).runUntilIO().runInput(res1).runUntilIO().runOutput()
-    val res3 = amps(3).runUntilIO().runInput(res2).runUntilIO().runOutput()
-    val res4 = amps(4).runUntilIO().runInput(res3).runUntilIO().runOutput()
+    val result = amps.foldLeft(lastOutput){ (input, amp) => amp.runUntilIO().runInput(input).runUntilIO().runOutput() }
     if (amps.foldLeft(false) {(bool, amp) => bool || amp.isHalted}) lastOutput
-    else solveSequenceFeedback(res4)
+    else solveSequenceFeedback(result)
   }
-
+  
+  /** Solves the sequence featuring a feedback loop */
   def solveSequenceMultiRun(phases: Array[Int]): Int =
   {
     reset()
