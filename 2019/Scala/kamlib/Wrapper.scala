@@ -4,15 +4,15 @@ package kamlib
 class Wrapper[A](function: => A)
 {
   /** Saved results */
-  val tuple: (A, Int) = wrap(function)
+  val tuple: (A, Double) = wrap(function)
 
   /** Time measurement */
-  private[this] def wrap[A](function: => A): (A, Int) =
+  private[this] def wrap[A](function: => A): (A, Double) =
   {
-    val evalStart = System.currentTimeMillis()
+    val evalStart = System.nanoTime()
     val result = function
-    val evalEnd = System.currentTimeMillis()
-    (result, (evalEnd-evalStart).toInt)
+    val evalEnd = System.nanoTime()
+    (result, ((evalEnd-evalStart)/100).toDouble/10000)
   }
 
   def print(): Unit =
@@ -20,7 +20,7 @@ class Wrapper[A](function: => A)
     println(s"Result: ${tuple._1} | Time: ${tuple._2}ms")
   }
   def result: A = tuple._1
-  def time: Int = tuple._2
+  def time: Double = tuple._2
 }
 
 object Wrapper
