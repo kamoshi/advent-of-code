@@ -1,5 +1,10 @@
 package intcode.opcode
 
+/**
+ * Less Than
+ * If the first parameter is less than the second parameter, it stores 1 in the position given by the third parameter.
+ * Otherwise, it stores 0.
+ */
 case object OpCode7 extends Action
 {
   /** length of an instruction */
