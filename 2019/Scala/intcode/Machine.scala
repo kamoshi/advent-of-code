@@ -84,9 +84,21 @@ class Machine(input: Array[Long])
         state = Ready
         runUntilHalt()
 
-      case (_, _, _, inputInstr: Input) =>
-        state = Input
-        this
+      case (_, _, m1, inputInstr: Input) =>
+        //buffer is empty
+        if (inputStream.isEmpty)
+        {
+          state = Input
+          this
+        }
+        // buffer contains inputs
+        else
+        {
+          inputInstr.input(software, relative, software(pointer+1), m1, inputStream.remove(0))
+          pointer += inputInstr.length
+          state = Ready
+          runUntilHalt()
+        }
 
       case (m3, m2, m1, instruction: Jump) =>
         val (bool, jmpPtr) = instruction.checkConditionAndJump(software, relative, software(pointer+1), software(pointer+2), software(pointer+3), m1, m2, m3)
@@ -111,23 +123,6 @@ class Machine(input: Array[Long])
     }
   }
 
-  def runInput(input: Long): Machine =
-  {
-    val tuple = OpCode99.parseInt(software(pointer).toInt)
-    tuple match
-    {
-      case (_, _, _, OpCode99) =>
-        state = Finished
-        this
-      case (_, _, m1, inputInstr: Input) =>
-        inputInstr.input(software, relative, software(pointer+1), m1, input)
-        pointer += inputInstr.length
-        state = Ready
-        this
-      case _ => throw new Exception("Unexpected instruction")
-    }
-  }
-
   @scala.annotation.tailrec
   final def run(): Machine =
   {
@@ -137,6 +132,7 @@ class Machine(input: Array[Long])
         runUntilHalt()
         run()
       case Finished =>
+        println("Machine finished")
         this
       case Output =>
         runUntilHalt()
@@ -149,7 +145,7 @@ class Machine(input: Array[Long])
           }
         else
           {
-            runInput(inputStream.remove(0))
+            runUntilHalt()
             run()
           }
     }
