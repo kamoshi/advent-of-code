@@ -11,7 +11,7 @@ object MachineTest
 
     val machine1: Machine = new Machine(input)
     machine1.setMem(1, 12)
-    machine1.setMem(2,2)
+    machine1.setMem(2, 2)
     assert(machine1.run().getMem(0) == 9706670)
 
     val machine2: Machine = new Machine(input)
@@ -24,10 +24,10 @@ object MachineTest
   {
     val input: Array[Long] = Reader.readString("/input5.txt").split("[^\\d-]+").map(x => x.toLong)
     val machine1: Machine = new Machine(input)
-    assert(machine1.runContinuous(List(1)).head == 12234644)
+    assert(machine1.enqueue(1).run().outputAll.last == 12234644)
 
     val machine2: Machine = new Machine(input)
-    assert(machine2.run().runInput(5).run().runOutput() == 3508186)
+    assert(machine2.enqueue(5).run().output == 3508186)
   }
 
   def testDay09(): Unit =
@@ -37,12 +37,10 @@ object MachineTest
     for(i <- input.indices) { memory(i) = input(i)}
 
     val machine1: Machine = new Machine(memory)
-    machine1.run().runInput(1)
-    assert(machine1.run().runOutput() == 4288078517L)
+    assert(machine1.enqueue(1).run().output == 4288078517L)
 
     val machine2: Machine = new Machine(memory)
-    machine2.run().runInput(2)
-    assert(machine2.run().runOutput() == 69256)
+    assert(machine2.enqueue(2).run().output == 69256)
   }
 
 }
