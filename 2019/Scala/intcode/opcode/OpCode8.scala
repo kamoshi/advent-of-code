@@ -1,5 +1,10 @@
 package intcode.opcode
 
+/**
+ * Equals
+ * If the first parameter is equal to the second parameter, it stores 1 in the position given by the third parameter.
+ * Otherwise, it stores 0.
+ */
 case object OpCode8 extends Action
 {
   /** length of an instruction */
