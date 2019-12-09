@@ -1,6 +1,6 @@
 package intcode.opcode
 
-/** Sum */
+/** Add */
 case object OpCode1 extends Action
 {
   /** length of an instruction */
