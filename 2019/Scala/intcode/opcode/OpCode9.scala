@@ -1,5 +1,8 @@
 package intcode.opcode
 
+/**
+ * Finds the value by which the relative base for pointer needs to be modified
+ */
 case object OpCode9 extends OpCode
 {
   /** Find what to add to relative */
