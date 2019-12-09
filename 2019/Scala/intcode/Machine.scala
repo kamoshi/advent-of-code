@@ -2,18 +2,48 @@ package intcode
 
 import intcode.opcode.{Action, Input, Jump, OpCode9, OpCode99, Output}
 
+import scala.collection.mutable.ListBuffer
+
 /**
  * Virtual IntCode machine
  * @param input Memory used to initialize the machine with.
  */
 class Machine(input: Array[Long])
 {
+  // Tapes
   private[this] val original: Array[Long] = input.clone()  // original memory saved in case of reset
   private[this] var software: Array[Long] = input.clone()  // working memory used by the machine
 
+  // State
   private[this] var pointer: Int = 0      // instruction pointer
   private[this] var relative: Long = 0    // relative pointer
   private[this] var state: State = Ready  // machine state
+
+  // IO Buffers
+  private[this] val inputStream: ListBuffer[Long] = new ListBuffer[Long]
+  private[this] val outputStream: ListBuffer[Long] = new ListBuffer[Long]
+
+  def enqueue(number: Long): Machine =
+  {
+    inputStream.addOne(number)
+    this
+  }
+
+  def enqueue(list: List[Long]): Machine =
+  {
+    inputStream.addAll(list)
+    this
+  }
+
+  def output: Long =
+    outputStream.remove(0)
+
+  def outputAll: List[Long] =
+  {
+    val accumulated = outputStream.result
+    outputStream.clear()
+    accumulated
+  }
 
   def isHalted: Boolean = state != Ready
   def isIO: Boolean = state == Input || state == Output
@@ -31,13 +61,15 @@ class Machine(input: Array[Long])
   def reset(): Machine =
   {
     software = original.clone()
+    inputStream.clear()
+    outputStream.clear()
     state = Ready
     pointer = 0
     this
   }
 
   @scala.annotation.tailrec
-  final def run(): Machine =
+  final def runUntilHalt(): Machine =
   {
     val tuple = OpCode99.parseInt(software(pointer).toInt)
     tuple match
@@ -46,9 +78,11 @@ class Machine(input: Array[Long])
         state = Finished
         this
 
-      case (_, _, _, outputInstr: Output) =>
-        state = Output
-        this
+      case (_, _, m1, outputInstr: Output) =>
+        outputStream.addOne(outputInstr.output(software, relative, software(pointer+1), m1))
+        pointer += outputInstr.length
+        state = Ready
+        runUntilHalt()
 
       case (_, _, _, inputInstr: Input) =>
         state = Input
@@ -59,19 +93,19 @@ class Machine(input: Array[Long])
         if (bool) pointer = jmpPtr
         else pointer += instruction.length
         state = Ready
-        run()
+        runUntilHalt()
 
       case (m3, m2, m1, instruction: Action) =>
         instruction.exec(software, relative, software(pointer+1), software(pointer+2), software(pointer+3), m1, m2, m3)
         pointer += instruction.length
         state = Ready
-        run()
+        runUntilHalt()
 
       case (_, _, m1, OpCode9) =>
         relative += OpCode9.exec(software, relative, software(pointer+1), m1)
         pointer += OpCode9.length
         state = Ready
-        run()
+        runUntilHalt()
 
       case _ => throw new Exception("Something went wrong")
     }
@@ -94,45 +128,29 @@ class Machine(input: Array[Long])
     }
   }
 
-  def runOutput(): Long =
-  {
-    val tuple = OpCode99.parseInt(software(pointer).toInt)
-    tuple match
-    {
-      case (_, _, _, OpCode99) =>
-        state = Finished
-        0
-      case (_, _, m1, outputInstr: Output) =>
-        val out = outputInstr.output(software, relative, software(pointer+1), m1)
-        pointer += outputInstr.length
-        state = Ready
-        out
-      case _ => throw new Exception("Unexpected instruction")
-    }
-  }
-
   @scala.annotation.tailrec
-  final def runContinuous(inputs: List[Long], outputs: List[Long] = List()): List[Long] =
+  final def run(): Machine =
   {
     this.state match
     {
       case Ready =>
+        runUntilHalt()
         run()
-        runContinuous(inputs, outputs)
       case Finished =>
-        outputs
+        this
       case Output =>
-        runContinuous(inputs, this.runOutput()::outputs)
+        runUntilHalt()
+        run()
       case Input =>
-        if (inputs.isEmpty)
+        if (inputStream.isEmpty)
           {
             println("Ran out of inputs")
-            outputs
+            this
           }
         else
           {
-            runInput(inputs.head)
-            runContinuous(inputs.tail, outputs)
+            runInput(inputStream.remove(0))
+            run()
           }
     }
   }
