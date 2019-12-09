@@ -1,12 +1,12 @@
 package intcode
 
-import intcode.opcode.{Action, Input, Jump, OpCode9, OpCode99, Output}
+import intcode.opcode.{Action, Jump, OpCode3, OpCode4, OpCode9, OpCode99}
 
 import scala.collection.mutable.ListBuffer
 
 /**
  * Virtual IntCode machine
- * @param input Memory used to initialize the machine with.
+ * @param input   Program memory used to initialize the machine
  */
 class Machine(input: Array[Long])
 {
@@ -73,18 +73,14 @@ class Machine(input: Array[Long])
     val tuple = OpCode99.parseInt(software(pointer).toInt)
     tuple match
     {
+      // 99 -> Reached end of the program -> halt
       case (_, _, _, OpCode99) =>
         state = Finished
         println("Machine finished")
         this
 
-      case (_, _, m1, outputInstr: Output) =>
-        outputStream.addOne(outputInstr.output(software, relative, software(pointer+1), m1))
-        pointer += outputInstr.length
-        state = Ready
-        run()
-
-      case (_, _, m1, inputInstr: Input) =>
+      // 3 -> Trying to retrieve an input value from the buffer; in case of failure -> halt
+      case (_, _, m1, OpCode3) =>
         //buffer is empty
         if (inputStream.isEmpty)
         {
@@ -95,12 +91,20 @@ class Machine(input: Array[Long])
         // buffer contains inputs
         else
         {
-          inputInstr.input(software, relative, software(pointer+1), m1, inputStream.remove(0))
-          pointer += inputInstr.length
+          OpCode3.input(software, relative, software(pointer+1), m1, inputStream.remove(0))
+          pointer += OpCode3.length
           state = Ready
           run()
         }
 
+      // 4 -> Outputting value to the OutputStream buffer
+      case (_, _, m1, OpCode4) =>
+        outputStream.addOne(OpCode4.output(software, relative, software(pointer+1), m1))
+        pointer += OpCode4.length
+        state = Ready
+        run()
+
+      // 5, 6 -> Check condition; if true modify instruction pointer
       case (m3, m2, m1, instruction: Jump) =>
         val (bool, jmpPtr) = instruction.checkConditionAndJump(software, relative, software(pointer+1), software(pointer+2), software(pointer+3), m1, m2, m3)
         if (bool) pointer = jmpPtr
@@ -108,12 +112,14 @@ class Machine(input: Array[Long])
         state = Ready
         run()
 
+      // 1, 2, 7, 8 -> Perform an action
       case (m3, m2, m1, instruction: Action) =>
         instruction.exec(software, relative, software(pointer+1), software(pointer+2), software(pointer+3), m1, m2, m3)
         pointer += instruction.length
         state = Ready
         run()
 
+      // 9 -> Modify relative pointer
       case (_, _, m1, OpCode9) =>
         relative += OpCode9.exec(software, relative, software(pointer+1), m1)
         pointer += OpCode9.length
