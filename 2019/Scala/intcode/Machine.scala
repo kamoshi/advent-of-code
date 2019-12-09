@@ -46,11 +46,10 @@ class Machine(input: Array[Long])
   }
 
   def isHalted: Boolean = state != Ready
-  def isIO: Boolean = state == Input || state == Output
   def isReady: Boolean = state == Ready
   def isInput: Boolean = state == Input
-  def isOutput: Boolean = state == Output
   def getState: State = state
+  def hasOutput: Boolean = outputStream.nonEmpty
 
   def getMem(ptr: Int): Long =
     software(ptr)
