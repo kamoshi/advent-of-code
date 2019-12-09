@@ -69,26 +69,28 @@ class Machine(input: Array[Long])
   }
 
   @scala.annotation.tailrec
-  final def runUntilHalt(): Machine =
+  final def run(): Machine =
   {
     val tuple = OpCode99.parseInt(software(pointer).toInt)
     tuple match
     {
       case (_, _, _, OpCode99) =>
         state = Finished
+        println("Machine finished")
         this
 
       case (_, _, m1, outputInstr: Output) =>
         outputStream.addOne(outputInstr.output(software, relative, software(pointer+1), m1))
         pointer += outputInstr.length
         state = Ready
-        runUntilHalt()
+        run()
 
       case (_, _, m1, inputInstr: Input) =>
         //buffer is empty
         if (inputStream.isEmpty)
         {
           state = Input
+          println("Ran out of inputs")
           this
         }
         // buffer contains inputs
@@ -97,7 +99,7 @@ class Machine(input: Array[Long])
           inputInstr.input(software, relative, software(pointer+1), m1, inputStream.remove(0))
           pointer += inputInstr.length
           state = Ready
-          runUntilHalt()
+          run()
         }
 
       case (m3, m2, m1, instruction: Jump) =>
@@ -105,49 +107,21 @@ class Machine(input: Array[Long])
         if (bool) pointer = jmpPtr
         else pointer += instruction.length
         state = Ready
-        runUntilHalt()
+        run()
 
       case (m3, m2, m1, instruction: Action) =>
         instruction.exec(software, relative, software(pointer+1), software(pointer+2), software(pointer+3), m1, m2, m3)
         pointer += instruction.length
         state = Ready
-        runUntilHalt()
+        run()
 
       case (_, _, m1, OpCode9) =>
         relative += OpCode9.exec(software, relative, software(pointer+1), m1)
         pointer += OpCode9.length
         state = Ready
-        runUntilHalt()
+        run()
 
       case _ => throw new Exception("Something went wrong")
-    }
-  }
-
-  @scala.annotation.tailrec
-  final def run(): Machine =
-  {
-    this.state match
-    {
-      case Ready =>
-        runUntilHalt()
-        run()
-      case Finished =>
-        println("Machine finished")
-        this
-      case Output =>
-        runUntilHalt()
-        run()
-      case Input =>
-        if (inputStream.isEmpty)
-          {
-            println("Ran out of inputs")
-            this
-          }
-        else
-          {
-            runUntilHalt()
-            run()
-          }
     }
   }
 }
