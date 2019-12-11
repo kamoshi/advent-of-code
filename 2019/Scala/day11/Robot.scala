@@ -5,9 +5,9 @@ import intcode.{Finished, Input, Machine, Ready}
 
 import scala.collection.mutable
 
-class Robot(software: Array[Long], init: Int = 0) {
+class Robot(software: Array[Long], init: Byte = 0) {
   private[this] val brain: Machine = new Machine(software)
-  private[this] val map: mutable.HashMap[(Int, Int), Int] = new mutable.HashMap()
+  private[this] val map: mutable.HashMap[(Int, Int), Byte] = new mutable.HashMap()
   private[this] var location: (Int, Int) = (0, 0)
   private[this] var direction: Direction = Up
 
@@ -15,9 +15,9 @@ class Robot(software: Array[Long], init: Int = 0) {
 
   def paintedPanels: Int = map.size
 
-  def updateColor(point: (Int, Int), color: Int): Unit = map(point) = color
+  def updateColor(point: (Int, Int), color: Byte): Unit = map(point) = color
 
-  def findColor(point: (Int, Int)): Int = map.getOrElse(point, 0)
+  def findColor(point: (Int, Int)): Byte = map.getOrElse(point, 0)
 
   def nextLocation(point: (Int, Int), direction: Direction, command: Int): ((Int, Int), Direction) = {
     (point, direction, command) match {
@@ -36,6 +36,8 @@ class Robot(software: Array[Long], init: Int = 0) {
   // This print function uses a naive approach of having stuff hardcoded for my output, so might require calibration
   // TODO make this better
   def printMap(): Unit = {
+    val list = map.toList   // map as list, order irrelevant
+    val p = list.head._1    // some random first point
     val matrix = Array.ofDim[Char](6, 46)
     map.foreach(tuple => {
       matrix(tuple._1._2+5)(tuple._1._1) = if (tuple._2 == 0) '.' else '#'
@@ -62,7 +64,7 @@ class Robot(software: Array[Long], init: Int = 0) {
       case Input =>
         brain.enqueue(findColor(location))
         brain.run()
-        updateColor(location, brain.output.toInt)  // 1st output -> color
+        updateColor(location, brain.output.toByte)  // 1st output -> color
         val (p, d) = nextLocation(location, direction, brain.output.toInt)  // 2nd output -> direction
         location = p
         direction = d
