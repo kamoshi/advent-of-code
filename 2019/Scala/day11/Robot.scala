@@ -34,6 +34,7 @@ class Robot(software: Array[Long], init: Int = 0) {
   }
 
   // This print function uses a naive approach of having stuff hardcoded for my output, so might require calibration
+  // TODO make this better
   def printMap(): Unit = {
     val matrix = Array.ofDim[Char](6, 46)
     map.foreach(tuple => {
