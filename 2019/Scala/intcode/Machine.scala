@@ -76,7 +76,7 @@ class Machine(input: Array[Long])
       // 99 -> Reached end of the program -> halt
       case (_, _, _, OpCode99) =>
         state = Finished
-        println("Machine finished")
+        //println("Machine finished")
         this
 
       // 3 -> Trying to retrieve an input value from the buffer; in case of failure -> halt
@@ -85,7 +85,7 @@ class Machine(input: Array[Long])
         if (inputStream.isEmpty)
         {
           state = Input
-          println("Ran out of inputs")
+          //println("Ran out of inputs")
           this
         }
         // buffer contains inputs
