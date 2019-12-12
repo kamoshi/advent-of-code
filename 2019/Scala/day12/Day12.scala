@@ -35,21 +35,21 @@ class Day12 {
     @scala.annotation.tailrec
     def findFirstXRepeat(array: Array[Moon], n: Int = 1): Int = {
       step(array, 1)
-      if (array(0).posX == -16 && array(1).posX == -14 && array(2).posX == 2 && array(3).posX == -3) n+1
+      if (array(0).posX == -16 && array(1).posX == -14 && array(2).posX == 2 && array(3).posX == -3) n+1 // n+1 because we're looking for kinetic E=0
       else findFirstXRepeat(array, n+1)
     }
 
     @scala.annotation.tailrec
     def findFirstYRepeat(array: Array[Moon], n: Int = 1): Int = {
       step(array, 1)
-      if (array(0).posY == 15 && array(1).posY == 5 && array(2).posY == 0 && array(3).posY == 18) n+1
+      if (array(0).posY == 15 && array(1).posY == 5 && array(2).posY == 0 && array(3).posY == 18) n+1 // n+1 because we're looking for kinetic E=0
       else findFirstYRepeat(array, n+1)
     }
 
     @scala.annotation.tailrec
     def findFirstZRepeat(array: Array[Moon], n: Int = 1): Int = {
       step(array, 1)
-      if (array(0).posZ == -9 && array(1).posZ == 4 && array(2).posZ == 6 && array(3).posZ == 9) n+1
+      if (array(0).posZ == -9 && array(1).posZ == 4 && array(2).posZ == 6 && array(3).posZ == 9) n+1 // n+1 because we're looking for kinetic E=0
       else findFirstZRepeat(array, n+1)
     }
 
