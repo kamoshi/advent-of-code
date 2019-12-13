@@ -83,6 +83,8 @@ object Main {
     val memory: Array[Long] = Array.ofDim[Long](5000)
     val input: Array[Long] = Reader.readString("/input13.txt").split("[^\\d-]+").map(x => x.toLong)
     for(i <- input.indices) { memory(i) = input(i)}
+    
+    for (i <- 1608 until 1650) { memory(i) = 3 }  /** Z0MG H4X */
 
     val machine: Machine = new Machine(memory)
     machine.setMem(0, 2)
