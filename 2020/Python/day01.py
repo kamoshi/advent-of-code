@@ -20,5 +20,5 @@ def solve_p2():
             print(combo)
 
             
-solve_p1():
+solve_p1()
 solve_p2()
