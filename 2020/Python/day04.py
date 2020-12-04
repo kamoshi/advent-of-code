@@ -1,31 +1,34 @@
 import re
 
 
-passports = [[]]
+def parse_input() -> list[dict]:
+    passports = [[]]
+
+    with open("input.txt") as file:
+        for line in file:
+            line_ = line.rstrip()
+            if len(line_) > 2:
+                passports[-1].append(line_)
+            else:
+                if not passports[-1] == []:
+                    passports.append([])
+
+    parsed = []
+
+    for passport in passports:
+        tags = []
+        for line in passport:
+            tags += line.split()
+        pass_dict = {}
+        for tag in tags:
+            (name, value) = tag.split(":")
+            pass_dict[name] = value
+        parsed.append(pass_dict)
+
+    return parsed
 
 
-with open("input.txt") as file:
-    for line in file:
-        line_ = line.rstrip()
-        if len(line_) > 2:
-            passports[-1].append(line_)
-        else:
-            if not passports[-1] == []:
-                passports.append([])
-
-
-parsed_passports = []
-
-
-for passport in passports:
-    tags = []
-    for line in passport:
-        tags += line.split()
-    pass_dict = {}
-    for tag in tags:
-        (name, value) = tag.split(":")
-        pass_dict[name] = value
-    parsed_passports.append(pass_dict)
+PASSPORTS = parse_input()
 
 
 def solve_p1() -> int:
@@ -37,7 +40,7 @@ def solve_p1() -> int:
         return True
 
     counted = 0
-    for passport in parsed_passports:
+    for passport in PASSPORTS:
         if test_passport(passport):
             counted += 1
     return counted
@@ -69,7 +72,7 @@ def solve_p2() -> int:
         return False not in result
 
     counted = 0
-    for passport in parsed_passports:
+    for passport in PASSPORTS:
         if test_passport_adv(passport):
             counted += 1
 
