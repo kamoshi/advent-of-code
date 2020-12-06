@@ -1,3 +1,6 @@
+import functools
+
+
 def parse_input() -> list[list[str]]:
     groups = [[]]
 
@@ -17,13 +20,10 @@ def solve_p1(groups: list[list[str]]) -> int:
 
     def count(group: list[str]) -> int:
         chars = set()
-        counted = 0
         for line in group:
             for char in line:
-                if char not in chars:
-                    counted += 1
-                    chars.add(char)
-        return counted
+                chars.add(char)
+        return len(chars)
 
     return sum(map(count, groups))
 
@@ -37,9 +37,7 @@ def solve_p2(groups: list[list[str]]) -> int:
             for char in line:
                 new_set.add(char)
             sets.append(new_set)
-        result_set = sets[0]
-        for i in range(1, len(sets)):
-            result_set = result_set.intersection(sets[i])
+        result_set = functools.reduce(set.intersection, sets)
         return len(result_set)
 
     return sum(map(count_intersection, groups))
