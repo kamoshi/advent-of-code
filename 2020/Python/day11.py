@@ -10,20 +10,19 @@ def parse_data() -> list[str]:
     return data
 
 
-def check_occupied(x: int, y: int, data: list[str]) -> int:
-    if 0 <= x < len(data[0]) and 0 <= y < len(data):
-        if data[y][x] == '#':
-            return 1
-    return 0
+# Count occupied seats *adjacent* to the seat at position (x, y)
+def count_occupied_adj(x: int, y: int, data: list[str]) -> int:
 
+    def check_occupied(_x: int, _y: int, _data: list[str]) -> int:
+        if 0 <= _x < len(data[0]) and 0 <= _y < len(data):
+            if data[_y][_x] == '#':
+                return 1
+        return 0
 
-def count_occu_adj(x: int, y: int, data: list[str]) -> int:
+    places = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
     result = 0
-    for _x in range(x - 1, x + 2):
-        for _y in range(y - 1, y + 2):
-            if _x == 0 and _y == 0:
-                continue
-            result += check_occupied(_x, _y, data)
+    for _x, _y in places:
+        result += check_occupied(x + _x, y + _y, data)
     return result
 
 
@@ -32,9 +31,9 @@ def generate_new_grid(past_data: list[str]):
     for y in range(len(past_data)):
         line = ""
         for x in range(len(past_data[0])):
-            if past_data[y][x] == "#" and count_occu_adj(x, y, past_data) > 4:
+            if past_data[y][x] == "#" and count_occupied_adj(x, y, past_data) >= 4:
                 new_char = 'L'
-            elif past_data[y][x] == 'L' and count_occu_adj(x, y, past_data) == 0:
+            elif past_data[y][x] == 'L' and count_occupied_adj(x, y, past_data) == 0:
                 new_char = '#'
             else:
                 new_char = past_data[y][x]
@@ -59,21 +58,15 @@ def find_stable_state(grid: list[str], limit_iter: int = 10000) -> Union[None, l
         grid = new_state
     return None
 
-# Works for the example,
-# doesn't work for the real imput???
-# Need to do something later
+
 def solve_p1(input_data: list[str]) -> int:
     final_state = find_stable_state(input_data)
     if final_state is None:
         return -1
     result = 0
-    print(final_state)
-    for y in range(len(final_state)):
-        for x in range(len(final_state[0])):
-            if final_state[y][x] == '#':
-                result += 1
+    for line in final_state:
+        result += line.count('#')
     return result
 
 
-DATA = parse_data()
-print(solve_p1(DATA))
+print(solve_p1(parse_data()))
