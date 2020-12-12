@@ -57,16 +57,60 @@ def apply_command(curr_pos: Tuple[int, int], curr_dir: Direction, command: Tuple
             return (curr_x + _number, curr_y), curr_dir
 
 
-def solve_p1(data: list[Tuple[str, int]]):
+def solve_p1(data: list[Tuple[str, int]]) -> int:
     current_direction = Direction.EAST
     current_position = 0, 0
     for command in data:
-        new_position, new_direction = apply_command(current_position, current_direction, command)
-        current_direction = new_direction
-        current_position = new_position
+        current_position, current_direction = apply_command(current_position, current_direction, command)
+    final_x, final_y = current_position
+    return abs(final_x)+abs(final_y)
+
+
+def apply_command2(curr_pos: Tuple[int, int], curr_wp: Tuple[int, int], command: Tuple[str, int]) -> Tuple[Tuple[int, int], Tuple[int, int]]:
+    curr_x, curr_y = curr_pos
+    wp_x, wp_y = curr_wp
+    _char, _number = command
+
+    def find_rotated_wp(_curr_wp: Tuple[int, int], how: str, degrees: int) -> (int, int):
+        degrees = degrees % 360
+        _wp_x, _wp_y = _curr_wp
+        if how == 'R':
+            degrees = 360 - degrees
+
+        if degrees == 0:
+            return _wp_x, _wp_y
+        elif degrees == 90:
+            return -_wp_y, _wp_x
+        elif degrees == 180:
+            return -_wp_x, -_wp_y
+        elif degrees == 270:
+            return _wp_y, -_wp_x
+
+    if _char == 'N':
+        return curr_pos, (wp_x, wp_y + _number)
+    elif _char == 'S':
+        return curr_pos, (wp_x, wp_y - _number)
+    elif _char == 'E':
+        return curr_pos, (wp_x + _number, wp_y)
+    elif _char == 'W':
+        return curr_pos, (wp_x - _number, wp_y)
+
+    elif _char in "LR":
+        return curr_pos, find_rotated_wp(curr_wp, _char, _number)
+
+    elif _char == 'F':
+        return (curr_x + wp_x * _number, curr_y + wp_y * _number), (wp_x, wp_y)
+
+
+def solve_p2(data: list[Tuple[str, int]]) -> int:
+    current_waypoint = (10, 1)
+    current_position = (0, 0)
+    for command in data:
+        current_position, current_waypoint = apply_command2(current_position, current_waypoint, command)
     final_x, final_y = current_position
     return abs(final_x)+abs(final_y)
 
 
 DATA = parse_data()
 print(solve_p1(DATA))
+print(solve_p2(DATA))
