@@ -23,7 +23,15 @@ def solve_p1(time: int, buses: list[str]) -> int:
 
 
 def solve_p2(buses):
-    pass
+    curr_step = 1
+    result = 1
+    for i in range(len(buses)):
+        if buses[i] == 'x':
+            continue
+        while (result + i) % int(buses[i]) != 0:
+            result += curr_step
+        curr_step *= int(buses[i])
+    return result
 
 
 TIME, BUSES = get_data()
