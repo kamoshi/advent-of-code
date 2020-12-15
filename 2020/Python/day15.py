@@ -6,7 +6,7 @@ def parse_data() -> list[int]:
     return numbers
 
 
-def solve_p1(data: list[int]) -> int:
+def solve(data: list[int], which_number: int) -> int:
     turns = {}
     curr_turn = 1
     last_num = 0
@@ -23,7 +23,8 @@ def solve_p1(data: list[int]) -> int:
         last_num = number
         curr_turn += 1
 
-    for i in range(curr_turn, 2021):
+    _limit = which_number + 1
+    for i in range(curr_turn, _limit):
         if last_num in turns:
             (before, last) = turns[last_num]
             if before != -1:
@@ -37,8 +38,12 @@ def solve_p1(data: list[int]) -> int:
     return last_num
 
 
+def solve_p1(data: list[int]) -> int:
+    return solve(data, which_number=2020)
+
+
 def solve_p2(data: list[int]) -> int:
-    pass
+    return solve(data, which_number=30000000)
 
 
 DATA = parse_data()
