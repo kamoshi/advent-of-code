@@ -2,7 +2,7 @@ import re
 from typing import Tuple
 
 
-def parse_data():
+def parse_data() -> Tuple[dict[str, Tuple[int, int, int, int]], list[int], list[list[int]]]:
     with open("input.txt") as file:
         constraints = {}
         my_ticket = []
@@ -30,7 +30,7 @@ def parse_data():
         return constraints, my_ticket, other_tickets
 
 
-def check_ticket_valid(ticket, constraints):
+def check_ticket_valid(ticket: list[int], constraints: dict[str, Tuple[int, int, int, int]]) -> Tuple[bool, int]:
     counter = 0
     valid = True
 
@@ -47,7 +47,7 @@ def check_ticket_valid(ticket, constraints):
     return valid, counter
 
 
-def solve_p1(constraints, tickets):
+def solve_p1(constraints: dict[str, Tuple[int, int, int, int]], tickets: list[list[int]]) -> int:
     counter = 0
     for ticket in tickets:
         _, ratio = check_ticket_valid(ticket, constraints)
@@ -55,10 +55,9 @@ def solve_p1(constraints, tickets):
     return counter
 
 
-# TODO: PART 2 IS BROKEN FOR NOW
-def solve_p2(constraints, my_ticket, other_tickets):
+def solve_p2(constraints: dict[str, Tuple[int, int, int, int]], my_ticket: list[int], tickets: list[list[int]]) -> int:
     only_valid = []
-    for ticket in other_tickets:
+    for ticket in tickets:
         valid, _ = check_ticket_valid(ticket, constraints)
         if valid:
             only_valid.append(ticket)
@@ -72,7 +71,7 @@ def solve_p2(constraints, my_ticket, other_tickets):
         fields[i] = possible
 
     # Intersect sets with possibilities iteratively
-    for ticket in other_tickets:
+    for ticket in only_valid:
         for i in range(len(ticket)):
             possible_here = set()
             for constraint in constraints:
@@ -100,7 +99,7 @@ def solve_p2(constraints, my_ticket, other_tickets):
 
     result = 1
     for k, v in fields_final.items():
-        if v[:10] == "departure":
+        if v[:9] == "departure":
             result *= my_ticket[k]
 
     return result
@@ -108,4 +107,4 @@ def solve_p2(constraints, my_ticket, other_tickets):
 
 CONSTRAINTS, MY_TICKET, OTHER_TICKETS = parse_data()
 print(solve_p1(CONSTRAINTS, OTHER_TICKETS))
-# print(solve_p2(CONSTRAINTS, MY_TICKET, OTHER_TICKETS))
+print(solve_p2(CONSTRAINTS, MY_TICKET, OTHER_TICKETS))
