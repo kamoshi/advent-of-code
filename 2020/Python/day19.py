@@ -1,6 +1,4 @@
 import re
-from typing import Union
-from functools import partial
 
 
 def parse_data():
@@ -32,18 +30,45 @@ def parse_data():
 
 def solve_p1(rules, strings) -> int:
 
-    def convert_to_regex(rules, rule_idx: int) -> str:
+    def convert_to_regex(rule_idx: int) -> str:
         rule = rules[rule_idx]
         if isinstance(rule, str):
             return rule
         else:
             out = "("
-            map_func = partial(convert_to_regex, rules)
             for rule_option in rule:
-                out += "".join(map(map_func, rule_option)) + "|"
+                out += "".join(map(convert_to_regex, rule_option)) + "|"
             return out[:-1] + ")"
 
-    pattern_str = convert_to_regex(rules, 0)+"$"
+    pattern_str = convert_to_regex(0)+"$"
+    pattern = re.compile(pattern_str)
+    matching = 0
+    for string in strings:
+        if pattern.match(string):
+            matching += 1
+    return matching
+
+
+def solve_p2(rules, strings) -> int:
+
+    def convert_to_regex2(rule_idx: int) -> str:
+        rule = rules[rule_idx]
+        if isinstance(rule, str):
+            return rule
+        else:
+            out = "("
+            if rule_idx not in [8, 11]:
+                for rule_option in rule:
+                    for index in rule_option:
+                        out += convert_to_regex2(index)
+                    out += "|"
+                return out[:-1] + ")"
+            elif rule_idx == 8:
+                return out + convert_to_regex2(42) + "+)"
+            elif rule_idx == 11:  # I'm not proud of this at all, but it worked
+                return out + convert_to_regex2(42) + f"({convert_to_regex2(42)}({convert_to_regex2(42)}({convert_to_regex2(42)}{convert_to_regex2(31)})?{convert_to_regex2(31)})?{convert_to_regex2(31)})?" + convert_to_regex2(31) + ")"
+
+    pattern_str = convert_to_regex2(0) + "$"
     pattern = re.compile(pattern_str)
     matching = 0
     for string in strings:
@@ -54,3 +79,7 @@ def solve_p1(rules, strings) -> int:
 
 RULES, STRINGS = parse_data()
 print(solve_p1(RULES, STRINGS))
+print(solve_p2(RULES, STRINGS))
+
+
+
