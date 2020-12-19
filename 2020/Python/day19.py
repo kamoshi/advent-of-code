@@ -65,7 +65,7 @@ def solve_p2(rules, strings) -> int:
                 return out[:-1] + ")"
             elif rule_idx == 8:
                 return out + convert_to_regex2(42) + "+)"
-            elif rule_idx == 11:  # I'm not proud of this at all, but it worked
+            elif rule_idx == 11:  # I'm not proud of this at all, but it worked (in fact I hate it)
                 return out + convert_to_regex2(42) + f"({convert_to_regex2(42)}({convert_to_regex2(42)}({convert_to_regex2(42)}{convert_to_regex2(31)})?{convert_to_regex2(31)})?{convert_to_regex2(31)})?" + convert_to_regex2(31) + ")"
 
     pattern_str = convert_to_regex2(0) + "$"
