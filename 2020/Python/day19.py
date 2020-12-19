@@ -1,4 +1,5 @@
 import re
+from functools import cache
 
 
 def parse_data():
@@ -30,6 +31,7 @@ def parse_data():
 
 def solve_p1(rules, strings) -> int:
 
+    @cache
     def convert_to_regex(rule_idx: int) -> str:
         rule = rules[rule_idx]
         if isinstance(rule, str):
@@ -51,6 +53,7 @@ def solve_p1(rules, strings) -> int:
 
 def solve_p2(rules, strings) -> int:
 
+    @cache
     def convert_to_regex2(rule_idx: int) -> str:
         rule = rules[rule_idx]
         if isinstance(rule, str):
@@ -65,7 +68,7 @@ def solve_p2(rules, strings) -> int:
                 return out[:-1] + ")"
             elif rule_idx == 8:
                 return out + convert_to_regex2(42) + "+)"
-            elif rule_idx == 11:  # I'm not proud of this at all, but it worked (in fact I hate it)
+            elif rule_idx == 11:  # I'm not proud of this at all, but it worked
                 return out + convert_to_regex2(42) + f"({convert_to_regex2(42)}({convert_to_regex2(42)}({convert_to_regex2(42)}{convert_to_regex2(31)})?{convert_to_regex2(31)})?{convert_to_regex2(31)})?" + convert_to_regex2(31) + ")"
 
     pattern_str = convert_to_regex2(0) + "$"
@@ -80,6 +83,3 @@ def solve_p2(rules, strings) -> int:
 RULES, STRINGS = parse_data()
 print(solve_p1(RULES, STRINGS))
 print(solve_p2(RULES, STRINGS))
-
-
-
