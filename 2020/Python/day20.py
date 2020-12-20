@@ -170,3 +170,30 @@ DATA = parse_data()
 connect_tiles(DATA, set(), DATA[0].flip_ud())
 print(solve_p1(DATA))
 
+
+def render_full_image(data: list[Tile]) -> Tile:
+    # Find top-left corner
+    current_start: Union[None, Tile] = None
+    for tile in data:
+        if not tile.left and not tile.up and tile.right and tile.down:
+            current_start = tile
+            break
+    rendered = [[]]
+    while current_start:
+        for i in range(1, len(current_start.image[0])-1):
+            line = []
+            line += current_start.image[i][1:-1]
+
+            current_right = current_start.right
+            while current_right:  # add line from the right side
+                line += current_right.image[i][1:-1]
+                current_right = current_right.right
+
+            rendered.append(line)
+        current_start = current_start.down
+
+    return Tile("RENDERED", rendered[1:])
+
+
+RENDERED = render_full_image(DATA)
+RENDERED.print()
