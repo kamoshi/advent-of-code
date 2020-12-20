@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Union
+from typing import Union, Tuple
 
 
 class Side(Enum):
@@ -166,6 +166,7 @@ def solve_p1(data: list[Tile]) -> int:
     return result
 
 
+# SOLVED PART 1
 DATA = parse_data()
 connect_tiles(DATA, set(), DATA[0].flip_ud())
 print(solve_p1(DATA))
@@ -195,5 +196,50 @@ def render_full_image(data: list[Tile]) -> Tile:
     return Tile("RENDERED", rendered[1:])
 
 
-RENDERED = render_full_image(DATA)
-RENDERED.print()
+def scan_window(window: list[list[str]], start_r: int, start_c: int) -> list[Tuple[int, int]]:
+    if len(window) != 3 or len(window[0]) != 20:
+        return []
+    required = [(0, 18), (1, 0), (1, 5), (1, 6), (1, 11), (1, 12), (1, 17), (1, 18), (1, 19), (2, 1), (2, 4), (2, 7), (2, 10), (2, 13), (2, 16)]
+    for r, c in required:
+        if window[r][c] != "#":
+            return []
+    return [(r+start_r, c+start_c) for (r, c) in required]
+
+
+def scan_image(image: list[list[str]]) -> set[Tuple[int, int]]:
+    found = set()
+    for i in range(len(image)-2):
+        for j in range(len(image[0])-19):
+            window = [image[i][j:j+20], image[i+1][j:j+20], image[i+2][j:j+20]]
+            for found_r, found_c in scan_window(window, start_r=i, start_c=j):
+                found.add((found_r, found_c))
+    return found
+
+
+def solve_p2(data: list[Tile]) -> int:
+    rendered = render_full_image(data)
+    scan_set = set()
+    for i in range(4):
+        scan_set = scan_image(rendered.image)
+        if len(scan_set) > 0:
+            break
+        rendered.rotate_r()
+    if len(scan_set) == 0:
+        rendered.flip_lr()
+        for i in range(4):
+            scan_set = scan_image(rendered.image)
+            if len(scan_set) > 0:
+                break
+            rendered.rotate_r()
+
+    # Find not marked characters
+    counted = 0
+    for r in range(len(rendered.image)):
+        for c in range(len(rendered.image[0])):
+            if rendered.image[r][c] == '#' and (r, c) not in scan_set:
+                counted += 1
+    return counted
+
+
+# SOLVED PART 2
+print(solve_p2(DATA))
