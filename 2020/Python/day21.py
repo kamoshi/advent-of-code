@@ -55,10 +55,23 @@ INGREDIENTS, ALLERGENS, DATA = parse()
 print(solve_p1(DATA, INGREDIENTS, ALLERGENS))
 
 
-def solve_p2(data: list[Tuple[list[str], list[str]]], ingredients: set[str], allergens: set[str]) -> int:
-    assigned_allergens = []
-    for allergen in allergens:
-        print(allergen, predict_ingredients(data, allergen))
+def solve_p2(data: list[Tuple[list[str], list[str]]], ingredients: set[str], allergens: set[str]) -> str:
+    assigned_allergens = sorted([(allergen, set(predict_ingredients(data, allergen))) for allergen in allergens], key=lambda e: len(e[1]))
+
+    bijection = []
+    while len(assigned_allergens[len(assigned_allergens)-1][1]) > 1:
+        sorted_allergens = assigned_allergens.copy()
+        first_allergen, first_set = sorted_allergens[0]
+        bijection.append((first_allergen, first_set))
+        assigned_allergens = []
+        for i in range(1, len(sorted_allergens)):
+            next_allergen, next_set = sorted_allergens[i]
+            assigned_allergens.append((next_allergen, next_set.difference(first_set)))
+        assigned_allergens = sorted(assigned_allergens, key=lambda e: len(e[1]))
+    bijection += assigned_allergens
+
+    result = ",".join([i for (a, i) in sorted(list(map(lambda elem: (elem[0], next(iter(elem[1]))), bijection)), key=lambda e: e[0])])
+    return result
 
 
-solve_p2(DATA, INGREDIENTS, ALLERGENS)
+print(solve_p2(DATA, INGREDIENTS, ALLERGENS))
