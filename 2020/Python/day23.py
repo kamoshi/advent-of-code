@@ -3,6 +3,7 @@ from typing import Tuple
 
 
 # Implementation uses generic python list -> pretty inefficient; too slow for part 2
+# (it's a pure function though ;) )
 def move_cups(cups: list[int]) -> list[int]:
     cups_round = cups[4:]
     current = cups[0]
