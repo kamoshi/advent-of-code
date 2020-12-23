@@ -1,8 +1,9 @@
 
 def move_cups(cups: list[int]) -> list[int]:
     cups_round = cups[:]
-    current = cups_round.pop(0)
-    taken = [cups_round.pop(0), cups_round.pop(0), cups_round.pop(0)]
+    current = cups_round[0]
+    taken = [cups_round[1], cups_round[2], cups_round[3]]
+    cups_round = cups_round[4:]
 
     minimum, maximum = min(cups_round), max(cups_round)
 
@@ -13,8 +14,7 @@ def move_cups(cups: list[int]) -> list[int]:
 
     for i in range(len(cups_round)):
         if cups_round[i] == destination:
-            for taken_cup in reversed(taken):
-                cups_round.insert(i+1, taken_cup)
+            cups_round = cups_round[:i+1] + taken + cups_round[i+1:]
             break
 
     cups_round.append(current)
@@ -33,3 +33,6 @@ def solve_p1(order: str, n: int) -> str:
 
 
 print(solve_p1("389547612", 100))
+
+
+# TODO: Part 2 should use different data structure
