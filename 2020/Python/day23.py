@@ -1,10 +1,8 @@
 
 def move_cups(cups: list[int]) -> list[int]:
-    cups_round = cups[:]
-    current = cups_round[0]
-    taken = [cups_round[1], cups_round[2], cups_round[3]]
-    cups_round = cups_round[4:]
-
+    cups_round = cups[4:]
+    current = cups[0]
+    taken = [cups[1], cups[2], cups[3]]
     minimum, maximum = min(cups_round), max(cups_round)
 
     destination = current
@@ -33,6 +31,3 @@ def solve_p1(order: str, n: int) -> str:
 
 
 print(solve_p1("389547612", 100))
-
-
-# TODO: Part 2 should use different data structure
