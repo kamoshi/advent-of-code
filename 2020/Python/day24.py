@@ -78,3 +78,75 @@ def solve_p1(data: list[str]) -> int:
 
 DATA = parse_data()
 print(solve_p1(DATA))
+
+
+# Part 2 is kind of done ad hoc today because christmas :p
+# not much time to work on it
+class Grid:
+    def __init__(self, row: int, col: int):
+        self.row = row
+        self.col = col
+        self.grid = []
+        for i in range(row):
+            row_list = []
+            for j in range(col):
+                row_list.append(False)
+            self.grid.append(row_list)
+
+    def flip(self, row: int, col: int, state: bool) -> None:
+        self.grid[row][col] = state
+
+    def get_state(self, row: int, col: int) -> bool:
+        if 0 <= row < len(self.grid) and 0 <= col < len(self.grid[0]):
+            return self.grid[row][col]
+        return False
+
+    def count_ns(self, row: int, col: int) -> int:
+        if row % 2 == 0:
+            ns = [(0, 1), (0, -1), (1, 1), (1, 0), (-1, 1), (-1, 0)]
+        else:
+            ns = [(0, 1), (0, -1), (1, 0), (1, -1), (-1, 0), (-1, -1)]
+        counted = 0
+        for ns_r, ns_c in ns:
+            counted += self.get_state(row+ns_r, col+ns_c)
+        return counted
+
+    def next(self) -> 'Grid':
+        next_grid = Grid(self.row, self.col)
+        for i in range(self.row):
+            for j in range(self.col):
+                active_ns = self.count_ns(i, j)
+                active = self.get_state(i, j)
+                if active and (active_ns == 0 or active_ns > 2):
+                    next_grid.flip(i, j, state=False)
+                elif not active and active_ns == 2:
+                    next_grid.flip(i, j, state=True)
+                else:
+                    next_grid.flip(i, j, state=active)
+        return next_grid
+
+    def count_black(self):
+        counted = 0
+        for i in range(self.row):
+            for j in range(self.col):
+                counted += self.get_state(i, j)
+        return counted
+
+
+grid = Grid(row=200, col=200)
+black_tiles: set[Tuple[int, int]] = set()
+for line in DATA:
+    found_tile = find_tile(0, 0, line)
+    if found_tile in black_tiles:
+        black_tiles.remove(found_tile)
+    else:
+        black_tiles.add(found_tile)
+
+
+for (x, y) in black_tiles:
+    grid.flip(x+100, y+100, True)
+
+for i in range(100):
+    grid = grid.next()
+
+print(grid.count_black())
