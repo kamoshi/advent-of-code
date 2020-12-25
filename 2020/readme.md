@@ -33,3 +33,4 @@ Day | Stars | Language
 - I originally planned to solve AoC 2020 in C#, but somehow I ended up using Python for most of it!
 - I found day 20 to be definitely the hardest/most time consuming.
 - It took me only 5 minutes to do day 18, because I had the tokenizer and RPN solver already done and ready to go xD
+- I did day 8 in C# in case the instruction stuff would be continued in the following days, but it never happened. I thought doing it in a statically typed OOP language would be better/cooler.
