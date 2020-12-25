@@ -1,3 +1,6 @@
+# After Action Raport
+of sorts
+
 Day | Stars | Language
 :-: | :-: | :-:
  1 | ★★ | Python
@@ -26,7 +29,7 @@ Day | Stars | Language
  24 | ★★ | Python
  25 | ★★ | Python
 
-Notes:
-I originally planned to solve AoC 2020 in C#, but somehow I ended up using Python for most of it!
-I found day 20 to be definitely the hardest/most time consuming.
-It took me only 5 minutes to do day 18, because I had the tokenizer and RPN solver already done and ready to go xD
+### Notes:
+- I originally planned to solve AoC 2020 in C#, but somehow I ended up using Python for most of it!
+- I found day 20 to be definitely the hardest/most time consuming.
+- It took me only 5 minutes to do day 18, because I had the tokenizer and RPN solver already done and ready to go xD
