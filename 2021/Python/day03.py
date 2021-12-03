@@ -51,6 +51,25 @@ def solve2() -> int:
     return res_o * res_c
 
 
+import numpy as np
+
+
+def load_input_np() -> np.ndarray:
+    with open('../.input/day03', 'r') as f:
+        return np.array([list(map(np.int32, list(i.strip()))) for i in f.readlines()])
+
+
+def solve1_np() -> int:
+    input = load_input_np()
+    binary = (input.mean(axis=0) >= 0.5)
+    invert = np.logical_not(binary)
+    decimalize = 2 ** np.arange(binary.shape[0])[::-1]
+    return sum(binary * decimalize) * sum(invert * decimalize)
+
+
+
 if __name__ == "__main__":
     print(solve1())  # 4001724
     print(solve2())  # 587895
+
+    print(solve1_np())  # 4001724
