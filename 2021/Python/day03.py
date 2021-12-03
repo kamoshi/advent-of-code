@@ -1,6 +1,3 @@
-from typing import DefaultDict
-
-
 def load_input() -> list[str]:
     with open('../.input/day03', 'r') as f:
         return [line.strip() for line in f.readlines()]
@@ -55,5 +52,5 @@ def solve2() -> int:
 
 
 if __name__ == "__main__":
-    print(solve1())
-    print(solve2())
+    print(solve1())  # 4001724
+    print(solve2())  # 587895

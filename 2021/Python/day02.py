@@ -39,5 +39,5 @@ def solve2() -> int:
 
 
 if __name__ == '__main__':
-    print(solve1())
-    print(solve2())
+    print(solve1())  # 2215080
+    print(solve2())  # 1864715580
