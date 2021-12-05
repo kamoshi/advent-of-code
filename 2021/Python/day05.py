@@ -33,17 +33,22 @@ def find_points_in_line(x1, y1, x2, y2, skip_diagonal: bool = False) -> Iterable
     return zip(range(x1, x2 + 1), range(y1, y2 + 1))
 
 
-def solve1() -> int:
+def solve1(skip_diagonal=True) -> int:
     visited_pts = set()
     crossed_pts = set()
     for (start, end) in loader():
-        for x, y in find_points_in_line(*start, *end, skip_diagonal=True):
+        for x, y in find_points_in_line(*start, *end, skip_diagonal):
             if (x, y) in visited_pts:
                 crossed_pts.add((x, y))
             else:
                 visited_pts.add((x, y))
     return len(crossed_pts)
+
+
+def solve2() -> int:
+    return solve1(skip_diagonal=False)
     
 
 if __name__ == '__main__':
     print(solve1())  # 5690
+    print(solve2())  # 17741
