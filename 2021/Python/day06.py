@@ -22,9 +22,26 @@ def load() -> list[int]:
 
 def solve1() -> int:
     fishes = [LanternFish(cycle=6, current=init) for init in load()]
-    [[fish.advance() for fish in fishes] for _ in range(100)]
+    [[fish.advance() for fish in fishes] for _ in range(80)]
     return sum([fish.count() for fish in fishes])
 
 
+def solve2() -> int:
+    fishes = { i: 0 for i in range(7) }
+    newborns = { i: 0 for i in range(9) }
+
+    for init in load():
+        fishes[init] += 1
+    
+    for epoch in range(256):
+        born_from_old = fishes[epoch % 7]
+        fishes[epoch % 7] += newborns[epoch % 9]
+        newborns[epoch % 9] += born_from_old
+    
+    return sum(fishes.values()) + sum(newborns.values())
+
+
+
 if __name__ == "__main__":
-    print(solve1())
+    print(solve1())  # 379414
+    print(solve2())  # 1705008653296
