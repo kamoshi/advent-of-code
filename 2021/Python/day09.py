@@ -1,3 +1,5 @@
+from functools import reduce
+
 import numpy as np
 from numpy.lib.stride_tricks import as_strided
 
@@ -18,12 +20,31 @@ def windows(target, shape=(3, 3), stride: int = 1):
 
 def solve1() -> int:
     hmap = load()
-    mins = windows(hmap).min(axis=(2, 3))
-    return np.sum((hmap + 1) * (hmap == mins))
+    return np.sum((hmap + 1) * (hmap == windows(hmap).min(axis=(2, 3))))
+
+
+def find_basin(areas, visited, x, y) -> int:
+    if visited[x, y]:
+        return 0
+    visited[x, y] = True
+    area = 1
+    for dx, dy in [(x+1, y), (x-1, y), (x, y+1), (x, y-1)]:
+        if (
+            0 <= dx < areas.shape[0] and
+            0 <= dy < areas.shape[1] and
+            areas[dx, dy]
+        ):
+            area += find_basin(areas, visited, dx, dy)
+    return area
 
 
 def solve2() -> int:
-    print(load())
+    hmap = load()
+    areas = hmap != 9
+    starts = np.argwhere(hmap == windows(hmap).min(axis=(2, 3)))
+    visited = np.zeros(hmap.shape, dtype=np.bool8)
+    basins = [find_basin(areas, visited, *start) for start in starts]
+    return reduce(lambda acc, num: acc * num, sorted(basins, reverse=True)[:3], 1)
 
 
 if __name__ == "__main__":
