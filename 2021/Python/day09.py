@@ -49,4 +49,4 @@ def solve2() -> int:
 
 if __name__ == "__main__":
     print(solve1())  # 522
-    print(solve2())  # None
+    print(solve2())  # 916688
