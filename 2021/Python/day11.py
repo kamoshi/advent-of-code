@@ -3,7 +3,7 @@ from numpy.lib.stride_tricks import as_strided
 
 
 def load():
-    with open('../.input/scratchpad') as f:
+    with open('../.input/day11') as f:
         lines = list(map(str.strip, f.readlines()))
     return np.array([int(num) for line in lines for num in line]).reshape((-1, len(lines)))
 
