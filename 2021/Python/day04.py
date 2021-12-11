@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def loader_np() -> np.ndarray:
+def loader_np():
     with open('../.input/day04', 'r') as f:
         data = f.read().splitlines()
     

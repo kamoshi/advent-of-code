@@ -15,7 +15,6 @@ def solve2() -> int:
     ))
     
 
-
 if __name__ == '__main__':
     print(solve1())  # 1766
     print(solve2())  # 1797

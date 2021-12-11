@@ -67,7 +67,6 @@ def solve1_np() -> int:
     return sum(binary * decimalize) * sum(invert * decimalize)
 
 
-
 if __name__ == "__main__":
     print(solve1())  # 4001724
     print(solve2())  # 587895
