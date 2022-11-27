@@ -1,9 +1,9 @@
 use crate::utils;
-use crate::utils::Day;
+use crate::utils::Source;
 
 
 pub fn run() -> () {
-    let data = parse_data(utils::read_lines(Day(1)));
+    let data = parse_data(utils::read_lines(Source::Day(1)));
 
     println!("Day 1");
     println!("Part 1: {}", solve1(&data));
