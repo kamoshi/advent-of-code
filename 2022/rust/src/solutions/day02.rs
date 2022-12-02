@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use crate::utils;
 
 
@@ -103,7 +104,7 @@ fn solve1(data: &Vec<(char, char)>) -> i32 {
         })
 }
 
-fn solve2(data: &Vec<(char, char)>) -> impl std::fmt::Display {
+fn solve2(data: &Vec<(char, char)>) -> i32 {
     data.iter()
         .fold(0, |acc, (other, result)| {
             let result = MatchResult::from(result);
