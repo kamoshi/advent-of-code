@@ -1,4 +1,6 @@
+#![allow(dead_code)]
 use crate::utils;
+
 
 pub fn run() -> () {
     let data = parse_data(utils::read_lines(utils::Source::Day(1)));
