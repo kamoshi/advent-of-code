@@ -24,8 +24,8 @@ fn solve2(data: &Vec<(HashSet<char>, HashSet<char>)>) -> i32 {
         .map(|(left, right)| left.union(right).cloned().collect())
         .collect::<Vec<HashSet<_>>>()
         .chunks_exact(3)
-        .map(|chunks| {
-            convert_char(find_intersection(chunks))
+        .map(|chunk| {
+            convert_char(find_intersection(chunk))
         })
         .sum()
 }
@@ -40,10 +40,11 @@ fn find_intersection(sets: &[HashSet<char>]) -> char {
     iter.next()
         .map(|set| {
             iter.fold(set, |set1, set2| {
-                set1.intersection(&set2).cloned().collect()
-            })
+                    set1.intersection(&set2).cloned().collect()
+                })
+                .into_iter()
+                .next().unwrap()
         })
-        .map(|x| *x.iter().next().unwrap())
         .unwrap()
 }
 
