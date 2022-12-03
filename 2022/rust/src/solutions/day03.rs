@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use std::collections::HashSet;
 use crate::utils;
 
@@ -7,22 +8,43 @@ pub fn run() -> () {
 
     println!("Day 1");
     println!("Part 1: {}", solve1(&data));
-    // println!("Part 2: {}", solve2(&data));
+    println!("Part 2: {}", solve2(&data));
 }
 
 fn solve1(data: &Vec<(HashSet<char>, HashSet<char>)>) -> i32 {
     data.iter()
         .map(|(left, right)| {
-            let char = *left.intersection(right).last().expect("Not found char") as i32;
-            char - if char < 97 { 38 } else { 96 }
+            convert_char(*left.intersection(right).next().unwrap())
         })
         .sum()
 }
 
-fn solve2(data: &Vec<Vec<i32>>) -> i32 {
-    2
+fn solve2(data: &Vec<(HashSet<char>, HashSet<char>)>) -> i32 {
+    data.iter()
+        .map(|(left, right)| left.union(right).cloned().collect())
+        .collect::<Vec<HashSet<_>>>()
+        .chunks_exact(3)
+        .map(|chunks| {
+            let char = {
+                let mut iter = chunks.iter().cloned();
+                iter.next()
+                    .map(|set| {
+                        iter.fold(set, |set1, set2| {
+                            set1.intersection(&set2).cloned().collect()
+                        })
+                    })
+                    .map(|x| *x.iter().next().unwrap())
+                    .unwrap()
+            };
+            convert_char(char)
+        })
+        .sum()
 }
 
+fn convert_char(char: char) -> i32 {
+    let char = char as i32;
+    char - if char < 97 { 38 } else { 96 }
+}
 
 fn parse_data(data: Vec<String>) -> Vec<(HashSet<char>, HashSet<char>)> {
     data.iter()
@@ -30,7 +52,7 @@ fn parse_data(data: Vec<String>) -> Vec<(HashSet<char>, HashSet<char>)> {
             let length = str.len();
             let left = &str[..length / 2];
             let right = &str[length / 2..];
-            (left.chars().into_iter().collect(),right.chars().into_iter().collect())
+            (left.chars().into_iter().collect(), right.chars().into_iter().collect())
         })
         .collect()
 }
