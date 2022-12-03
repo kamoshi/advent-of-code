@@ -6,7 +6,7 @@ use crate::utils;
 pub fn run() -> () {
     let data = parse_data(utils::read_lines(utils::Source::Day(3)));
 
-    println!("Day 1");
+    println!("Day 3");
     println!("Part 1: {}", solve1(&data));
     println!("Part 2: {}", solve2(&data));
 }
