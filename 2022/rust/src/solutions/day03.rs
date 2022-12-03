@@ -25,18 +25,7 @@ fn solve2(data: &Vec<(HashSet<char>, HashSet<char>)>) -> i32 {
         .collect::<Vec<HashSet<_>>>()
         .chunks_exact(3)
         .map(|chunks| {
-            let char = {
-                let mut iter = chunks.iter().cloned();
-                iter.next()
-                    .map(|set| {
-                        iter.fold(set, |set1, set2| {
-                            set1.intersection(&set2).cloned().collect()
-                        })
-                    })
-                    .map(|x| *x.iter().next().unwrap())
-                    .unwrap()
-            };
-            convert_char(char)
+            convert_char(find_intersection(chunks))
         })
         .sum()
 }
@@ -44,6 +33,18 @@ fn solve2(data: &Vec<(HashSet<char>, HashSet<char>)>) -> i32 {
 fn convert_char(char: char) -> i32 {
     let char = char as i32;
     char - if char < 97 { 38 } else { 96 }
+}
+
+fn find_intersection(sets: &[HashSet<char>]) -> char {
+    let mut iter = sets.iter().cloned();
+    iter.next()
+        .map(|set| {
+            iter.fold(set, |set1, set2| {
+                set1.intersection(&set2).cloned().collect()
+            })
+        })
+        .map(|x| *x.iter().next().unwrap())
+        .unwrap()
 }
 
 fn parse_data(data: Vec<String>) -> Vec<(HashSet<char>, HashSet<char>)> {
