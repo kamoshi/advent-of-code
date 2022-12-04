@@ -121,3 +121,25 @@ fn parse_data(data: Vec<String>) -> Vec<(char, char)> {
         })
         .collect()
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn data() -> Vec<&'static str> {
+        vec!["A Y", "B X", "C Z"]
+    }
+
+    #[test]
+    fn part1() {
+        let data = parse_data(data().into_iter().map(String::from).collect());
+        assert_eq!(15, solve1(&data));
+    }
+
+    #[test]
+    fn part2() {
+        let data = parse_data(data().into_iter().map(String::from).collect());
+        assert_eq!(12, solve2(&data));
+    }
+}

@@ -10,11 +10,12 @@ pub fn run() -> () {
     println!("Part 2: {}", solve2(&data));
 }
 
+
 fn solve1(data: &Vec<Vec<i32>>) -> i32 {
     data.iter().map(|xs| xs.iter().sum::<i32>()).max().unwrap()
 }
 
-#[inline]
+#[inline(always)]
 fn insert(arr: &mut [i32; 3], to_insert: i32) {
     if to_insert > arr[2] {
         for idx in (0..3).rev() {
@@ -40,7 +41,6 @@ fn solve2(data: &Vec<Vec<i32>>) -> i32 {
     three.iter().sum()
 }
 
-
 fn parse_data(data: Vec<String>) -> Vec<Vec<i32>> {
     data.iter()
         .fold(vec![vec![]], | mut acc, next| {
@@ -53,4 +53,32 @@ fn parse_data(data: Vec<String>) -> Vec<Vec<i32>> {
             }
             acc
         })
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn data() -> Vec<&'static str> {
+        vec![
+            "1000", "2000", "3000", "",
+            "4000", "",
+            "5000", "6000", "",
+            "7000", "8000", "9000", "",
+            "10000",
+        ]
+    }
+
+    #[test]
+    fn part1() {
+        let data = parse_data(data().into_iter().map(String::from).collect());
+        assert_eq!(24000, solve1(&data));
+    }
+
+    #[test]
+    fn part2() {
+        let data = parse_data(data().into_iter().map(String::from).collect());
+        assert_eq!(45000, solve2(&data));
+    }
 }
