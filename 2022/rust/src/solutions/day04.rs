@@ -12,22 +12,20 @@ pub fn run() -> () {
 }
 
 
-fn solve1(data: &Vec<((i32, i32), (i32, i32))>) -> i32 {
+fn solve1(data: &Vec<((i32, i32), (i32, i32))>) -> usize {
     data.iter()
-        .copied()
-        .map(|((s1, e1), (s2, e2))|
-            if s1 <= s2 && e2 <= e1 || s2 <= s1 && e1 <= e2 { 1 } else { 0 }
+        .filter(|((s1, e1), (s2, e2))|
+            s1 <= s2 && e2 <= e1 || s2 <= s1 && e1 <= e2
         )
-        .sum()
+        .count()
 }
 
-fn solve2(data: &Vec<((i32, i32), (i32, i32))>) -> i32 {
+fn solve2(data: &Vec<((i32, i32), (i32, i32))>) -> usize {
     data.iter()
-        .copied()
-        .map(|((s1, e1), (s2, e2))|
-            if s1 <= e2 && s2 <= e1 { 1 } else { 0 }
+        .filter(|((s1, e1), (s2, e2))|
+            s1 <= e2 && s2 <= e1
         )
-        .sum()
+        .count()
 }
 
 
