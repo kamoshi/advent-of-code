@@ -1,10 +1,10 @@
+#![allow(dead_code)]
 use regex::Regex;
 use crate::utils;
 
-type Data = (Vec<Vec<char>>, Vec<(i32, i32, i32)>);
 
 pub fn run() -> () {
-    let data = parse_data(utils::read_lines(utils::Source::Scratch));
+    let data = parse_data(utils::read_lines(utils::Source::Day(5)));
 
     println!("Day 5");
     println!("Part 1: {}", solve1(&data));
@@ -12,17 +12,38 @@ pub fn run() -> () {
 }
 
 
-fn solve1(data: &Data) -> i32 {
-    1
+type Data = (Vec<Vec<char>>, Vec<(usize, usize, usize)>);
+
+fn solve1((stacks, actions): &Data) -> String {
+    let mut stacks = stacks.clone();
+
+    for &(n, from, to) in actions {
+        for _ in 0..n {
+            let char = stacks.get_mut(from).unwrap().pop().unwrap();
+            stacks.get_mut(to).unwrap().push(char);
+        }
+    }
+
+    stacks.into_iter().map(|mut stack| stack.pop().unwrap()).collect()
 }
 
-fn solve2(data: &Data) -> i32 {
-    2
+fn solve2((stacks, actions): &Data) -> String {
+    let mut stacks = stacks.clone();
+
+    for &(n, from, to) in actions {
+        (0..n).map(|_| stacks.get_mut(from).unwrap().pop().unwrap())
+            .collect::<Vec<_>>()
+            .into_iter()
+            .rev()
+            .for_each(|char| stacks.get_mut(to).unwrap().push(char));
+    }
+
+    stacks.into_iter().map(|mut stack| stack.pop().unwrap()).collect()
 }
 
 
 fn parse_data(data: Vec<String>) -> Data {
-    let re = Regex::new("( {3}|[\\[\\w\\]]{3})").unwrap();
+    let re = Regex::new("( {3}|[\\[\\w\\]]{3}) ?").unwrap();
     let iter = data.iter();
     let mut boxes = iter
         .map_while(|s| {
@@ -58,8 +79,8 @@ fn parse_data(data: Vec<String>) -> Data {
         .filter_map(|str| re.captures(str))
         .map(|cap| (
             cap.get(1).unwrap().as_str().parse().unwrap(),
-            cap.get(2).unwrap().as_str().parse().unwrap(),
-            cap.get(3).unwrap().as_str().parse().unwrap(),
+            cap.get(2).unwrap().as_str().parse::<usize>().unwrap() - 1,
+            cap.get(3).unwrap().as_str().parse::<usize>().unwrap() - 1,
         ))
         .collect();
 
@@ -89,12 +110,12 @@ mod tests {
     #[test]
     fn part1() {
         let data = parse_data(data());
-        assert_eq!(1, solve1(&data));
+        assert_eq!("CMZ", solve1(&data));
     }
 
     #[test]
     fn part2() {
         let data = parse_data(data());
-        assert_eq!(2, solve2(&data));
+        assert_eq!("MCD", solve2(&data));
     }
 }
