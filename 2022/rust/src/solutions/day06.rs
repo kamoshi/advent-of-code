@@ -12,20 +12,24 @@ pub fn run() -> () {
 
 
 fn solve1(data: &Vec<char>) -> usize {
-    data.windows(4)
+    marker_for(&data, 4)
+}
+
+fn solve2(data: &Vec<char>) -> usize {
+    marker_for(&data, 14)
+}
+
+fn marker_for(data: &Vec<char>, window_len: usize) -> usize {
+    data.windows(window_len)
         .enumerate()
         .filter_map(|(idx, window)| {
-            let unique = window.iter().copied().collect::<HashSet<char>>().len() == 4;
+            let unique = window.iter().copied().collect::<HashSet<char>>().len() == window_len;
             match unique {
-                true => Some(idx + 4),
+                true => Some(idx + window_len),
                 false => None
             }
         })
         .next().unwrap()
-}
-
-fn solve2(data: &Vec<char>) -> i32 {
-    2
 }
 
 
@@ -60,6 +64,6 @@ mod tests {
     #[test]
     fn part2() {
         let data = parse_data(data());
-        assert_eq!(2, solve2(&data));
+        assert_eq!(19, solve2(&data));
     }
 }
