@@ -22,13 +22,11 @@ fn solve2(data: &Vec<char>) -> usize {
 fn marker_for(data: &Vec<char>, window_len: usize) -> usize {
     data.windows(window_len)
         .enumerate()
-        .filter_map(|(idx, window)| {
-            let unique = window.iter().copied().collect::<HashSet<char>>().len() == window_len;
-            match unique {
-                true => Some(idx + window_len),
-                false => None
-            }
-        })
+        .filter_map(|(idx, window)| window.iter()
+            .collect::<HashSet<_>>()
+            .len().eq(&window_len)
+            .then_some(idx + window_len)
+        )
         .next().unwrap()
 }
 
