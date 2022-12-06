@@ -43,47 +43,48 @@ fn solve2((stacks, actions): &Data) -> String {
 
 
 fn parse_data(data: Vec<String>) -> Data {
-    let re = Regex::new("( {3}|[\\[\\w\\]]{3}) ?").unwrap();
-    let iter = data.iter();
-    let mut boxes = iter
-        .map_while(|s| {
-            let cap = re.find_iter(s)
-                .map(|x| x.as_str().trim())
-                .enumerate()
-                .filter_map(|(idx, str)| match str.len() {
-                    0 => None,
-                    _ => Some((idx, str.chars().nth(1).unwrap()))
-                })
-                .collect::<Vec<_>>();
-            if cap.is_empty() { None } else { Some(cap) }
-        })
-        .collect::<Vec<_>>()
-        .into_iter()
-        .rev();
-    let stacks = boxes.next()
-        .map(|bottom| {
-            let stacks = bottom.into_iter()
-                .map(|(_, c)| vec![c])
-                .collect::<Vec<_>>();
-            boxes.fold(stacks, |mut acc, next| {
-                next.into_iter().for_each(|(i, c)|
-                    acc[i].push(c)
-                );
-                acc
+    let stacks = {
+        let re = Regex::new("( {3}|[\\[\\w\\]]{3}) ?").unwrap();
+        let mut boxes = data.iter()
+            .map_while(|s| {
+                let cap = re.find_iter(s)
+                    .map(|x| x.as_str().trim())
+                    .enumerate()
+                    .filter_map(|(idx, str)| match str.len() {
+                        0 => None,
+                        _ => Some((idx, str.chars().nth(1).unwrap()))
+                    })
+                    .collect::<Vec<_>>();
+                if cap.is_empty() { None } else { Some(cap) }
             })
-        })
-        .unwrap();
-
-    let re = Regex::new("^move (\\d+) from (\\d+) to (\\d+)$").unwrap();
-    let actions = data.iter()
-        .filter_map(|str| re.captures(str))
-        .map(|cap| (
-            cap.get(1).unwrap().as_str().parse().unwrap(),
-            cap.get(2).unwrap().as_str().parse::<usize>().unwrap() - 1,
-            cap.get(3).unwrap().as_str().parse::<usize>().unwrap() - 1,
-        ))
-        .collect();
-
+            .collect::<Vec<_>>()
+            .into_iter()
+            .rev();
+        boxes.next()
+            .map(|bottom| {
+                let stacks = bottom.into_iter()
+                    .map(|(_, c)| vec![c])
+                    .collect::<Vec<_>>();
+                boxes.fold(stacks, |mut acc, next| {
+                    next.into_iter().for_each(|(i, c)|
+                        acc[i].push(c)
+                    );
+                    acc
+                })
+            })
+            .unwrap()
+    };
+    let actions = {
+        let re = Regex::new("^move (\\d+) from (\\d+) to (\\d+)$").unwrap();
+        data.iter()
+            .filter_map(|str| re.captures(str))
+            .map(|cap| (
+                cap.get(1).unwrap().as_str().parse().unwrap(),
+                cap.get(2).unwrap().as_str().parse::<usize>().unwrap() - 1,
+                cap.get(3).unwrap().as_str().parse::<usize>().unwrap() - 1,
+            ))
+            .collect()
+    };
     (stacks, actions)
 }
 

@@ -64,7 +64,7 @@ fn parse_data(data: Vec<String>) -> Vec<(HashSet<char>, HashSet<char>)> {
 mod tests {
     use super::*;
 
-    fn data() -> Vec<&'static str> {
+    fn data() -> Vec<String> {
         vec![
             "vJrwpWtwJgWrhcsFMMfFFhFp",
             "jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL",
@@ -73,17 +73,18 @@ mod tests {
             "ttgJtRGJQctTZtZT",
             "CrZsJsPPZsGzwwsLwLmpwMDw"
         ]
+            .into_iter().map(String::from).collect()
     }
 
     #[test]
     fn part1() {
-        let data = parse_data(data().into_iter().map(String::from).collect());
+        let data = parse_data(data());
         assert_eq!(157, solve1(&data));
     }
 
     #[test]
     fn part2() {
-        let data = parse_data(data().into_iter().map(String::from).collect());
+        let data = parse_data(data());
         assert_eq!(70, solve2(&data));
     }
 }

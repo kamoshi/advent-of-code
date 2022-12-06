@@ -127,19 +127,20 @@ fn parse_data(data: Vec<String>) -> Vec<(char, char)> {
 mod tests {
     use super::*;
 
-    fn data() -> Vec<&'static str> {
+    fn data() -> Vec<String> {
         vec!["A Y", "B X", "C Z"]
+            .into_iter().map(String::from).collect()
     }
 
     #[test]
     fn part1() {
-        let data = parse_data(data().into_iter().map(String::from).collect());
+        let data = parse_data(data());
         assert_eq!(15, solve1(&data));
     }
 
     #[test]
     fn part2() {
-        let data = parse_data(data().into_iter().map(String::from).collect());
+        let data = parse_data(data());
         assert_eq!(12, solve2(&data));
     }
 }

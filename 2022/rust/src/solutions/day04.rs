@@ -53,19 +53,20 @@ fn parse_data(data: Vec<String>) -> Vec<((i32, i32), (i32, i32))> {
 mod tests {
     use super::*;
 
-    fn data() -> Vec<&'static str> {
+    fn data() -> Vec<String> {
         vec!["2-4,6-8", "2-3,4-5", "5-7,7-9", "2-8,3-7", "6-6,4-6", "2-6,4-8"]
+            .into_iter().map(String::from).collect()
     }
 
     #[test]
     fn part1() {
-        let data = parse_data(data().into_iter().map(String::from).collect());
+        let data = parse_data(data());
         assert_eq!(2, solve1(&data));
     }
 
     #[test]
     fn part2() {
-        let data = parse_data(data().into_iter().map(String::from).collect());
+        let data = parse_data(data());
         assert_eq!(4, solve2(&data));
     }
 }

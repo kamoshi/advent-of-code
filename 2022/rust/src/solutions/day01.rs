@@ -60,7 +60,7 @@ fn parse_data(data: Vec<String>) -> Vec<Vec<i32>> {
 mod tests {
     use super::*;
 
-    fn data() -> Vec<&'static str> {
+    fn data() -> Vec<String> {
         vec![
             "1000", "2000", "3000", "",
             "4000", "",
@@ -68,17 +68,18 @@ mod tests {
             "7000", "8000", "9000", "",
             "10000",
         ]
+            .into_iter().map(String::from).collect()
     }
 
     #[test]
     fn part1() {
-        let data = parse_data(data().into_iter().map(String::from).collect());
+        let data = parse_data(data());
         assert_eq!(24000, solve1(&data));
     }
 
     #[test]
     fn part2() {
-        let data = parse_data(data().into_iter().map(String::from).collect());
+        let data = parse_data(data());
         assert_eq!(45000, solve2(&data));
     }
 }
