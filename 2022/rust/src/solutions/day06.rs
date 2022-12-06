@@ -12,14 +12,14 @@ pub fn run() -> () {
 
 
 fn solve1(data: &[char]) -> usize {
-    marker_for(data, 4)
+    marker_bitwise(data, 4)
 }
 
 fn solve2(data: &[char]) -> usize {
-    marker_for(data, 14)
+    marker_bitwise(data, 14)
 }
 
-fn marker_for(data: &[char], window_len: usize) -> usize {
+fn marker_iter(data: &[char], window_len: usize) -> usize {
     data.windows(window_len)
         .enumerate()
         .filter_map(|(idx, window)| window.iter()
@@ -28,6 +28,23 @@ fn marker_for(data: &[char], window_len: usize) -> usize {
             .then_some(idx + window_len)
         )
         .next().unwrap()
+}
+
+fn marker_bitwise(data: &[char], window_len: usize) -> usize {
+    static OFFSET: u8 = 'a' as u8;
+    let mut acc: u32 = 0;
+    let mut idx: usize = 0;
+    for &char in data {
+        acc ^= 1 << char as u8 - OFFSET;
+        if idx >= window_len {
+            acc ^= 1 << data[idx - window_len] as u8 - OFFSET;
+            if acc.count_ones() == window_len as u32 {
+                return idx + 1;
+            }
+        }
+        idx += 1;
+    }
+    return usize::MAX;
 }
 
 
