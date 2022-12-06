@@ -30,7 +30,7 @@ fn solve2(data: &Vec<((i32, i32), (i32, i32))>) -> usize {
 
 
 fn parse_data(data: Vec<String>) -> Vec<((i32, i32), (i32, i32))> {
-    let re = Regex::new(r"^(\d+)-(\d+),(\d+)-(\d+)$").unwrap();
+    let re = Regex::new(r#"^(\d+)-(\d+),(\d+)-(\d+)$"#).unwrap();
     data.iter()
         .map(|s| {
             let c = re.captures(s).unwrap();

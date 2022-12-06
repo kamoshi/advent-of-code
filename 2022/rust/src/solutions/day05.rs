@@ -44,7 +44,7 @@ fn solve2((stacks, actions): &Data) -> String {
 
 fn parse_data(data: Vec<String>) -> Data {
     let stacks = {
-        let re = Regex::new("( {3}|[\\[\\w\\]]{3}) ?").unwrap();
+        let re = Regex::new(r#"( {3}|[\[\w\]]{3}) ?"#).unwrap();
         let mut boxes = data.iter()
             .map_while(|s| {
                 let cap = re.find_iter(s)
@@ -75,7 +75,7 @@ fn parse_data(data: Vec<String>) -> Data {
             .unwrap()
     };
     let actions = {
-        let re = Regex::new("^move (\\d+) from (\\d+) to (\\d+)$").unwrap();
+        let re = Regex::new(r#"^move (\d+) from (\d+) to (\d+)$"#).unwrap();
         data.iter()
             .filter_map(|str| re.captures(str))
             .map(|cap| (
