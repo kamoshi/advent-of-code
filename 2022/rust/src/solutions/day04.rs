@@ -12,7 +12,7 @@ pub fn run() -> () {
 }
 
 
-fn solve1(data: &Vec<((i32, i32), (i32, i32))>) -> usize {
+fn solve1(data: &[((i32, i32), (i32, i32))]) -> usize {
     data.iter()
         .filter(|((s1, e1), (s2, e2))|
             s1 <= s2 && e2 <= e1 || s2 <= s1 && e1 <= e2
@@ -20,7 +20,7 @@ fn solve1(data: &Vec<((i32, i32), (i32, i32))>) -> usize {
         .count()
 }
 
-fn solve2(data: &Vec<((i32, i32), (i32, i32))>) -> usize {
+fn solve2(data: &[((i32, i32), (i32, i32))]) -> usize {
     data.iter()
         .filter(|((s1, e1), (s2, e2))|
             s1 <= e2 && s2 <= e1

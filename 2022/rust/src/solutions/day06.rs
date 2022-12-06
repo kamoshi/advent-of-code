@@ -11,15 +11,15 @@ pub fn run() -> () {
 }
 
 
-fn solve1(data: &Vec<char>) -> usize {
-    marker_for(&data, 4)
+fn solve1(data: &[char]) -> usize {
+    marker_for(data, 4)
 }
 
-fn solve2(data: &Vec<char>) -> usize {
-    marker_for(&data, 14)
+fn solve2(data: &[char]) -> usize {
+    marker_for(data, 14)
 }
 
-fn marker_for(data: &Vec<char>, window_len: usize) -> usize {
+fn marker_for(data: &[char], window_len: usize) -> usize {
     data.windows(window_len)
         .enumerate()
         .filter_map(|(idx, window)| window.iter()
@@ -34,10 +34,7 @@ fn marker_for(data: &Vec<char>, window_len: usize) -> usize {
 fn parse_data(data: Vec<String>) -> Vec<char> {
     data.into_iter()
         .next()
-        .map(|char| char
-            .chars()
-            .collect()
-        )
+        .map(|char| char.chars().collect())
         .unwrap()
 }
 
