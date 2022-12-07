@@ -1,5 +1,5 @@
-use std::collections::{HashMap, HashSet};
-use std::ops::{Deref, DerefMut};
+#![allow(dead_code)]
+use std::collections::BinaryHeap;
 use crate::utils;
 
 
@@ -19,67 +19,62 @@ enum CliEntry {
     File(String, i32),
 }
 
-struct FileNode<'data> {
-    name: &'data str,
+struct FileNode {
     size: i32,
 }
 
 struct Node<'data> {
     name: &'data str,
+    // Backref pointer
     parent: Option<*mut Node<'data>>,
-    files: Vec<FileNode<'data>>,
+    files: Vec<FileNode>,
     subdirs: Vec<Box<Node<'data>>>,
 }
 
+impl<'data> Node<'data> {
+    fn new(name: &'data str, parent: Option<*mut Node<'data>>) -> Node<'data> {
+        Node { name, parent, files: vec![], subdirs: vec![] }
+    }
+}
+
 fn cli_to_tree(data: &[CliEntry]) -> Box<Node> {
-    let mut root = Box::new(Node {
-        name: "/",
-        parent: None,
-        files: vec![],
-        subdirs: vec![],
-    });
+    let mut root = Box::new(Node::new("/", None));
 
     let mut current: &mut Node = root.as_mut();
     for command in data {
         match command {
             CliEntry::Cd(name) => {
                 if name == ".." {
-                    // We don't care, input has to be valid
+                    // We don't care, backref has to be valid
                     unsafe {
                         current = &mut *current.parent.unwrap()
                     };
                 }
                 else {
-                    current = current.subdirs.iter_mut()
+                    current = &mut *current.subdirs.iter_mut()
                         .find(|next| next.name == name)
-                        .unwrap()
-                        .deref_mut();
+                        .unwrap();
                 }
             },
             CliEntry::Ls => {},
             CliEntry::Dir(name) => {
                 let current_ptr = current as *mut Node;
-                current.subdirs.push(Box::new(Node {
-                    name,
-                    parent: Some(current_ptr),
-                    files: vec![],
-                    subdirs: vec![]
-                }));
+                current.subdirs.push(Box::new(Node::new(name, Some(current_ptr))));
             },
-            CliEntry::File(name, size) => {
-                current.files.push(FileNode { name, size: *size })
+            CliEntry::File(_, size) => {
+                current.files.push(FileNode { size: *size })
             },
         }
     };
     root
 }
 
-fn find_sizes(root: &Box<Node>) -> (i32, Vec<i32>) {
+fn find_sizes(root: &Box<Node>) -> (i32, BinaryHeap<i32>) {
     let mut acc: i32 = root.files.iter().map(|f| f.size).sum();
-    let mut sizes: Vec<i32> = vec![];
+    let mut sizes: BinaryHeap<i32> = BinaryHeap::new();
     root.subdirs.iter().for_each(|subdir| {
         let (sub_size, sub_sizes) = find_sizes(subdir);
-        sizes.extend_from_slice(&sub_sizes);
+        sizes.extend(sub_sizes.iter());
         acc += sub_size;
     });
     sizes.push(acc);
@@ -99,7 +94,17 @@ fn solve1(data: &[CliEntry]) -> i32 {
 }
 
 fn solve2(data: &[CliEntry]) -> i32 {
-    2
+    static DISK_SPACE: i32 = 70000000;
+    static REQUIRED: i32 = 30000000;
+    let tree = cli_to_tree(&data[1..]);
+    let (size, sizes) = find_sizes(&tree);
+
+    let threshold = REQUIRED - (DISK_SPACE - size);
+    sizes.into_sorted_vec()
+        .into_iter()
+        .filter(|&x| x > threshold)
+        .next()
+        .unwrap()
 }
 
 
@@ -154,6 +159,6 @@ mod tests {
     #[test]
     fn part2() {
         let data = parse_data(data());
-        assert_eq!(2, solve2(&data));
+        assert_eq!(24933642, solve2(&data));
     }
 }
