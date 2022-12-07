@@ -3,7 +3,7 @@ use crate::utils;
 
 
 pub fn run() -> () {
-    let data = parse_data(utils::read_lines(utils::Source::Day(1)));
+    let data = parse_data(&utils::read_lines(utils::Source::Day(1)));
 
     println!("Day 1");
     println!("Part 1: {}", solve1(&data));
@@ -41,14 +41,15 @@ fn solve2(data: &Vec<Vec<i32>>) -> i32 {
     three.iter().sum()
 }
 
-fn parse_data(data: Vec<String>) -> Vec<Vec<i32>> {
+fn parse_data<T: AsRef<str>>(data: &[T]) -> Vec<Vec<i32>> {
     data.iter()
         .fold(vec![vec![]], | mut acc, next| {
-            if next.len() == 0 {
+            let s = next.as_ref();
+            if s.len() == 0 {
                 acc.push(Vec::new())
             }
             else {
-                let number: i32 = next.parse().expect("Parse error");
+                let number: i32 = s.parse().expect("Parse error");
                 acc.last_mut().and_then(|last| Some(last.push(number)));
             }
             acc
@@ -60,26 +61,23 @@ fn parse_data(data: Vec<String>) -> Vec<Vec<i32>> {
 mod tests {
     use super::*;
 
-    fn data() -> Vec<String> {
-        vec![
-            "1000", "2000", "3000", "",
-            "4000", "",
-            "5000", "6000", "",
-            "7000", "8000", "9000", "",
-            "10000",
-        ]
-            .into_iter().map(String::from).collect()
-    }
+    static DATA: &[&str; 14] = &[
+        "1000", "2000", "3000", "",
+        "4000", "",
+        "5000", "6000", "",
+        "7000", "8000", "9000", "",
+        "10000",
+    ];
 
     #[test]
     fn part1() {
-        let data = parse_data(data());
+        let data = parse_data(DATA);
         assert_eq!(24000, solve1(&data));
     }
 
     #[test]
     fn part2() {
-        let data = parse_data(data());
+        let data = parse_data(DATA);
         assert_eq!(45000, solve2(&data));
     }
 }

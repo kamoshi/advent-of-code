@@ -4,7 +4,7 @@ use crate::utils;
 
 
 pub fn run() -> () {
-    let data = parse_data(utils::read_lines(utils::Source::Day(5)));
+    let data = parse_data(&utils::read_lines(utils::Source::Day(5)));
 
     println!("Day 5");
     println!("Part 1: {}", solve1(&data));
@@ -42,11 +42,12 @@ fn solve2((stacks, actions): &Data) -> String {
 }
 
 
-fn parse_data(data: Vec<String>) -> Data {
+fn parse_data<T: AsRef<str>>(data: &[T]) -> Data {
     let stacks = {
         let re = Regex::new(r#"( {3}|[\[\w\]]{3}) ?"#).unwrap();
         let mut boxes = data.iter()
             .map_while(|s| {
+                let s = s.as_ref();
                 let cap = re.find_iter(s)
                     .map(|x| x.as_str().trim())
                     .enumerate()
@@ -77,7 +78,7 @@ fn parse_data(data: Vec<String>) -> Data {
     let actions = {
         let re = Regex::new(r#"^move (\d+) from (\d+) to (\d+)$"#).unwrap();
         data.iter()
-            .filter_map(|str| re.captures(str))
+            .filter_map(|str| re.captures(str.as_ref()))
             .map(|cap| (
                 cap.get(1).unwrap().as_str().parse().unwrap(),
                 cap.get(2).unwrap().as_str().parse::<usize>().unwrap() - 1,
@@ -93,30 +94,27 @@ fn parse_data(data: Vec<String>) -> Data {
 mod tests {
     use super::*;
 
-    fn data() -> Vec<String> {
-        vec![
-            "    [D]    ",
-            "[N] [C]    ",
-            "[Z] [M] [P]",
-            " 1   2   3 ",
-            "",
-            "move 1 from 2 to 1",
-            "move 3 from 1 to 3",
-            "move 2 from 2 to 1",
-            "move 1 from 1 to 2",
-        ]
-            .into_iter().map(String::from).collect()
-    }
+    static DATA: &[&str; 9] = &[
+        "    [D]    ",
+        "[N] [C]    ",
+        "[Z] [M] [P]",
+        " 1   2   3 ",
+        "",
+        "move 1 from 2 to 1",
+        "move 3 from 1 to 3",
+        "move 2 from 2 to 1",
+        "move 1 from 1 to 2",
+    ];
 
     #[test]
     fn part1() {
-        let data = parse_data(data());
+        let data = parse_data(DATA);
         assert_eq!("CMZ", solve1(&data));
     }
 
     #[test]
     fn part2() {
-        let data = parse_data(data());
+        let data = parse_data(DATA);
         assert_eq!("MCD", solve2(&data));
     }
 }

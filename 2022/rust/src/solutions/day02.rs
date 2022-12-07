@@ -3,7 +3,7 @@ use crate::utils;
 
 
 pub fn run() -> () {
-    let data = parse_data(utils::read_lines(utils::Source::Day(2)));
+    let data = parse_data(&utils::read_lines(utils::Source::Day(2)));
 
     println!("Day 2");
     println!("Part 1: {}", solve1(&data));
@@ -113,9 +113,10 @@ fn solve2(data: &[(char, char)]) -> i32 {
         })
 }
 
-fn parse_data(data: Vec<String>) -> Vec<(char, char)> {
+fn parse_data<T: AsRef<str>>(data: &[T]) -> Vec<(char, char)> {
     data.into_iter()
         .map(|line| {
+            let line = line.as_ref();
             let mut chars = line.chars();
             (chars.next().unwrap(), chars.last().unwrap())
         })
@@ -127,20 +128,17 @@ fn parse_data(data: Vec<String>) -> Vec<(char, char)> {
 mod tests {
     use super::*;
 
-    fn data() -> Vec<String> {
-        vec!["A Y", "B X", "C Z"]
-            .into_iter().map(String::from).collect()
-    }
+    static DATA: &[&str; 3] = &["A Y", "B X", "C Z"];
 
     #[test]
     fn part1() {
-        let data = parse_data(data());
+        let data = parse_data(DATA);
         assert_eq!(15, solve1(&data));
     }
 
     #[test]
     fn part2() {
-        let data = parse_data(data());
+        let data = parse_data(DATA);
         assert_eq!(12, solve2(&data));
     }
 }

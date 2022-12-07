@@ -4,7 +4,7 @@ use crate::utils;
 
 
 pub fn run() -> () {
-    let data = parse_data(utils::read_lines(utils::Source::Day(3)));
+    let data = parse_data(&utils::read_lines(utils::Source::Day(3)));
 
     println!("Day 3");
     println!("Part 1: {}", solve1(&data));
@@ -48,9 +48,10 @@ fn find_intersection(sets: &[HashSet<char>]) -> char {
         .unwrap()
 }
 
-fn parse_data(data: Vec<String>) -> Vec<(HashSet<char>, HashSet<char>)> {
+fn parse_data<T: AsRef<str>>(data: &[T]) -> Vec<(HashSet<char>, HashSet<char>)> {
     data.iter()
         .map(|str| {
+            let str = str.as_ref();
             let length = str.len();
             let left = &str[..length / 2];
             let right = &str[length / 2..];
@@ -64,27 +65,24 @@ fn parse_data(data: Vec<String>) -> Vec<(HashSet<char>, HashSet<char>)> {
 mod tests {
     use super::*;
 
-    fn data() -> Vec<String> {
-        vec![
-            "vJrwpWtwJgWrhcsFMMfFFhFp",
-            "jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL",
-            "PmmdzqPrVvPwwTWBwg",
-            "wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn",
-            "ttgJtRGJQctTZtZT",
-            "CrZsJsPPZsGzwwsLwLmpwMDw"
-        ]
-            .into_iter().map(String::from).collect()
-    }
+    static DATA: &[&str; 6] = &[
+        "vJrwpWtwJgWrhcsFMMfFFhFp",
+        "jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL",
+        "PmmdzqPrVvPwwTWBwg",
+        "wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn",
+        "ttgJtRGJQctTZtZT",
+        "CrZsJsPPZsGzwwsLwLmpwMDw"
+    ];
 
     #[test]
     fn part1() {
-        let data = parse_data(data());
+        let data = parse_data(DATA);
         assert_eq!(157, solve1(&data));
     }
 
     #[test]
     fn part2() {
-        let data = parse_data(data());
+        let data = parse_data(DATA);
         assert_eq!(70, solve2(&data));
     }
 }

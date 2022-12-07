@@ -4,7 +4,7 @@ use crate::utils;
 
 
 pub fn run() -> () {
-    let data = parse_data(utils::read_lines(utils::Source::Day(4)));
+    let data = parse_data(&utils::read_lines(utils::Source::Day(4)));
 
     println!("Day 4");
     println!("Part 1: {}", solve1(&data));
@@ -29,10 +29,11 @@ fn solve2(data: &[((i32, i32), (i32, i32))]) -> usize {
 }
 
 
-fn parse_data(data: Vec<String>) -> Vec<((i32, i32), (i32, i32))> {
+fn parse_data<T: AsRef<str>>(data: &[T]) -> Vec<((i32, i32), (i32, i32))> {
     let re = Regex::new(r#"^(\d+)-(\d+),(\d+)-(\d+)$"#).unwrap();
     data.iter()
         .map(|s| {
+            let s = s.as_ref();
             let c = re.captures(s).unwrap();
             (
                 (
@@ -53,20 +54,17 @@ fn parse_data(data: Vec<String>) -> Vec<((i32, i32), (i32, i32))> {
 mod tests {
     use super::*;
 
-    fn data() -> Vec<String> {
-        vec!["2-4,6-8", "2-3,4-5", "5-7,7-9", "2-8,3-7", "6-6,4-6", "2-6,4-8"]
-            .into_iter().map(String::from).collect()
-    }
+    static DATA: &[&str; 6] = &["2-4,6-8", "2-3,4-5", "5-7,7-9", "2-8,3-7", "6-6,4-6", "2-6,4-8"];
 
     #[test]
     fn part1() {
-        let data = parse_data(data());
+        let data = parse_data(DATA);
         assert_eq!(2, solve1(&data));
     }
 
     #[test]
     fn part2() {
-        let data = parse_data(data());
+        let data = parse_data(DATA);
         assert_eq!(4, solve2(&data));
     }
 }
