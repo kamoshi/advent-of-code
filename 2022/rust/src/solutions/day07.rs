@@ -46,9 +46,7 @@ fn cli_to_tree(data: &[CliEntry]) -> Box<Node> {
                     };
                 }
                 else {
-                    current = &mut *current.subdirs.iter_mut()
-                        .find(|next| next.name == name)
-                        .unwrap();
+                    current = current.subdirs.iter_mut().find(|dir| dir.name == name).unwrap();
                 }
             },
             CliEntry::Ls => {},
