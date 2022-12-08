@@ -4,3 +4,7 @@
 
 ### Unsafe count 😅
 1. Day 7: mutable pointer to parent stored in the tree node. Unsafe deref when traversing upwards
+
+
+### Notes to self
+- Day 8: Once again AoC reminded me that sometimes the simpler solution is easier and better
