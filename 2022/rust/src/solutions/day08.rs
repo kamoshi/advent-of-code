@@ -64,22 +64,6 @@ fn solve1(data: &[Vec<i32>]) -> usize {
     create_mask(data).into_iter().map(|row| row.iter().filter(|&e| *e).count()).sum()
 }
 
-#[inline(always)]
-fn find_limit(
-    data: &[Vec<i32>],
-    last_heights: &mut HashMap<i32, usize>,
-    row: usize,
-    col: usize
-) -> usize {
-    let mut limit = 0;
-    for h in data[row][col]..=9 {
-        if let Some(since) = last_heights.get(&h) {
-            limit = max(limit, *since);
-        }
-    };
-    limit
-}
-
 fn find_scores(data: &[Vec<i32>]) -> Vec<Vec<i32>> {
     let rows = data.len();
     let cols = data[0].len();
@@ -90,34 +74,39 @@ fn find_scores(data: &[Vec<i32>]) -> Vec<Vec<i32>> {
         .collect();
 
     for row in 0..rows {
-        let mut last_heights: HashMap<i32, usize> = HashMap::new();
         for col in 0..cols {
-            let limit = find_limit(data, &mut last_heights, row, col);
-            scores[row][col] = scores[row][col] * (col - limit) as i32;
-            last_heights.insert(data[row][col], col);
-        };
-        let mut last_heights: HashMap<i32, usize> = HashMap::new();
-        for col in (0..cols).rev() {
-            let limit = find_limit(data, &mut last_heights, row, col);
-            let limit = if limit == 0 { cols - 1 } else { limit };
-            scores[row][col] = scores[row][col] * (limit - col) as i32;
-            last_heights.insert(data[row][col], col);
-        };
-    };
+            let mut score = 1;
+            let current = data[row][col];
 
-    for col in 0..cols {
-        let mut last_heights: HashMap<i32, usize> = HashMap::new();
-        for row in 0..rows {
-            let limit = find_limit(data, &mut last_heights, row, col);
-            scores[row][col] = scores[row][col] * (row - limit) as i32;
-            last_heights.insert(data[row][col], row);
-        };
-        let mut last_heights: HashMap<i32, usize> = HashMap::new();
-        for row in (0..cols).rev() {
-            let limit = find_limit(data, &mut last_heights, row, col);
-            let limit = if limit == 0 { rows - 1 } else { limit };
-            scores[row][col] = scores[row][col] * (limit - row) as i32;
-            last_heights.insert(data[row][col], row);
+            let mut temp = 0;
+            for c in (0..col).rev() {
+                temp += 1;
+                if data[row][c] >= current { break };
+            }
+            score *= temp;
+
+            let mut temp = 0;
+            for c in (col+1)..cols {
+                temp += 1;
+                if data[row][c] >= current { break };
+            }
+            score *= temp;
+
+            let mut temp = 0;
+            for r in (0..row).rev() {
+                temp += 1;
+                if data[r][col] >= current { break };
+            }
+            score *= temp;
+
+            let mut temp = 0;
+            for r in (row+1)..rows {
+                temp += 1;
+                if data[r][col] >= current { break };
+            }
+            score *= temp;
+
+            scores[row][col] = score;
         };
     };
 
@@ -128,7 +117,10 @@ fn solve2(data: &[Vec<i32>]) -> i32 {
     let scores = find_scores(data);
 
     let reducer = |a, b| max(a, b);
-    scores.into_iter().map(|row| row.iter().copied().reduce(reducer).unwrap()).reduce(reducer).unwrap()
+    scores.into_iter()
+        .map(|row| row.iter().copied().reduce(reducer).unwrap())
+        .reduce(reducer)
+        .unwrap()
 }
 
 
