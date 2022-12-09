@@ -5,5 +5,5 @@ mod solutions;
 
 
 fn main() {
-    solutions::day08::run();
+    solutions::day09::run();
 }
