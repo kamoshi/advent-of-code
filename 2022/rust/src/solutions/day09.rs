@@ -55,13 +55,11 @@ fn tail_visits(data: &[Move], knots: &mut [(i32, i32)]) -> HashSet<(i32, i32)> {
 }
 
 fn solve1(data: &[Move]) -> usize {
-    let mut knots = [(0, 0); 2];
-    tail_visits(&data, &mut knots).len()
+    tail_visits(&data, &mut [(0, 0); 2]).len()
 }
 
 fn solve2(data: &[Move]) -> usize {
-    let mut knots = [(0, 0); 10];
-    tail_visits(&data, &mut knots).len()
+    tail_visits(&data, &mut [(0, 0); 10]).len()
 }
 
 
