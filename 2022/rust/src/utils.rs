@@ -1,6 +1,9 @@
+pub mod matrix;
+
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
+
 
 #[allow(dead_code)]
 pub enum Source { Scratch, Day(i32) }
