@@ -1,6 +1,6 @@
 #![allow(dead_code)]
-use std::cmp::max;
 use crate::utils;
+use crate::utils::matrix::Matrix;
 
 
 pub fn run() -> () {
@@ -14,45 +14,39 @@ pub fn run() -> () {
 
 #[inline(always)]
 fn mark_visible(
-    data: &[Vec<i32>],
-    visible: &mut Vec<Vec<bool>>,
+    data: &Matrix<i32>,
+    visible: &mut Matrix<bool>,
     last_height: &mut i32,
-    row: usize,
-    col: usize
+    (row, col): (usize, usize)
 ) {
-    let height = data[row][col];
+    let height = *data.get_at(row, col);
     if height > *last_height {
-        visible[row][col] = true;
+        visible.set_at(row, col, true);
         *last_height = height;
     }
 }
 
-fn create_mask(data: &[Vec<i32>]) -> Vec<Vec<bool>> {
-    let rows = data.len();
-    let cols = data[0].len();
-
-    let mut visible: Vec<Vec<bool>> = (0..rows)
-        .into_iter()
-        .map(|_| (0..cols).into_iter().map(|_| false).collect())
-        .collect();
+fn create_mask(data: &Matrix<i32>) -> Matrix<bool> {
+    let (rows, cols) = data.shape();
+    let mut visible = Matrix::with_shape((rows, cols), false);
 
     for row in 0..rows {
         let mut last_height = i32::MIN;
         for col in 0..cols {
-            mark_visible(data, &mut visible, &mut last_height, row, col);
+            mark_visible(data, &mut visible, &mut last_height, (row, col));
         }
         let mut last_height = i32::MIN;
         for col in (0..cols).rev() {
-            mark_visible(data, &mut visible, &mut last_height, row, col);
+            mark_visible(data, &mut visible, &mut last_height, (row, col));
         }
         // Transposed passes
         let mut last_height = i32::MIN;
         for col in 0..cols {
-            mark_visible(data, &mut visible, &mut last_height, col, row);
+            mark_visible(data, &mut visible, &mut last_height, (col, row));
         }
         let mut last_height = i32::MIN;
         for col in (0..cols).rev() {
-            mark_visible(data, &mut visible, &mut last_height, col, row);
+            mark_visible(data, &mut visible, &mut last_height, (col, row));
         }
     };
 
@@ -60,78 +54,64 @@ fn create_mask(data: &[Vec<i32>]) -> Vec<Vec<bool>> {
 }
 
 
-fn solve1(data: &[Vec<i32>]) -> usize {
-    create_mask(data).into_iter().map(|row| row.iter().filter(|&e| *e).count()).sum()
+fn solve1(data: &Matrix<i32>) -> usize {
+    create_mask(data).iter().filter(|&e| *e).count()
 }
 
-fn find_scores(data: &[Vec<i32>]) -> Vec<Vec<i32>> {
-    let rows = data.len();
-    let cols = data[0].len();
-
-    let mut scores: Vec<Vec<i32>> = (0..rows)
-        .into_iter()
-        .map(|_| (0..cols).into_iter().map(|_| 1).collect())
-        .collect();
+fn find_scores(data: &Matrix<i32>) -> Matrix<i32> {
+    let (rows, cols) = data.shape();
+    let mut scores = Matrix::with_shape((rows, cols), 1);
 
     for row in 0..rows {
         for col in 0..cols {
             let mut score = 1;
-            let current = data[row][col];
+            let current = *data.get_at(row, col);
 
             let mut temp = 0;
             for c in (0..col).rev() {
                 temp += 1;
-                if data[row][c] >= current { break };
+                if *data.get_at(row, c) >= current { break };
             }
             score *= temp;
 
             let mut temp = 0;
             for c in (col+1)..cols {
                 temp += 1;
-                if data[row][c] >= current { break };
+                if *data.get_at(row, c) >= current { break };
             }
             score *= temp;
 
             let mut temp = 0;
             for r in (0..row).rev() {
                 temp += 1;
-                if data[r][col] >= current { break };
+                if *data.get_at(r, col) >= current { break };
             }
             score *= temp;
 
             let mut temp = 0;
             for r in (row+1)..rows {
                 temp += 1;
-                if data[r][col] >= current { break };
+                if *data.get_at(r, col) >= current { break };
             }
             score *= temp;
 
-            scores[row][col] = score;
+            scores.set_at(row, col, score);
         };
     };
 
     scores
 }
 
-fn solve2(data: &[Vec<i32>]) -> i32 {
-    let scores = find_scores(data);
-
-    let reducer = |a, b| max(a, b);
-    scores.into_iter()
-        .map(|row| row.iter().copied().reduce(reducer).unwrap())
-        .reduce(reducer)
-        .unwrap()
+fn solve2(data: &Matrix<i32>) -> i32 {
+    find_scores(data).into_iter().reduce(i32::max).unwrap()
 }
 
 
-fn parse_data<T: AsRef<str>>(data: &[T]) -> Vec<Vec<i32>> {
+fn parse_data<T: AsRef<str>>(data: &[T]) -> Matrix<i32> {
     data.iter()
-        .map(|line| line.as_ref()
-            .chars()
-            .map(|c| c.to_digit(10).unwrap() as i32)
-            .collect::<Vec<_>>()
-        )
-        .collect::<Vec<_>>()
+        .flat_map(|line| line.as_ref().chars().map(|c| c.to_digit(10).unwrap() as i32))
+        .collect::<Matrix<_>>()
+        .reshape_rows(data.len())
 }
 
 
@@ -157,8 +137,8 @@ mod tests {
     fn part2() {
         let data = parse_data(DATA);
         let scores = find_scores(&data);
-        assert_eq!(4, scores[1][2]);
-        assert_eq!(8, scores[3][2]);
+        assert_eq!(4, *scores.get_at(1, 2));
+        assert_eq!(8, *scores.get_at(3, 2));
         assert_eq!(8, solve2(&data));
     }
 }

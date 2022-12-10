@@ -1,6 +1,6 @@
 #![allow(dead_code)]
-use std::ops::{Deref, Index, IndexMut};
-use std::slice::ChunksExact;
+use std::ops::{Index, IndexMut};
+use std::slice::{ChunksExact, Iter};
 
 
 pub struct Matrix<T> {
@@ -19,40 +19,33 @@ impl<T: Default + Clone> Matrix<T> {
     }
 }
 
-// impl<'a, T: Copy + 'a> Matrix<T> {
-//     pub fn build_from<N, O>(container: O) -> Self
-//     where
-//         N: IntoIterator<Item=&'a T> + 'a,
-//         O: IntoIterator<Item=&'a N>,
-//     {
-//         let mut array: Vec<T> = Vec::new();
-//         let mut cols = Vec::new();
-//         for row in container {
-//             let len = (&row).into_iter()
-//                 .fold(0, |cols, item| {
-//                     array.push(*item);
-//                     cols + 1
-//                 });
-//             cols.push(len);
-//         };
-//         Self { array, rows: array.len() / cols[0], cols: cols[0] }
-//     }
-// }
-
 impl<T> Matrix<T> {
     pub fn shape(&self) -> (usize, usize) {
         (self.rows, self.cols)
+    }
+
+    pub fn reshape(mut self, (rows, cols): (usize, usize)) -> Self {
+        assert_eq!(self.rows * self.cols, rows * cols);
+        (self.rows, self.cols) = (rows, cols);
+        self
+    }
+
+    pub fn reshape_rows(mut self, rows: usize) -> Self {
+        let cols = self.cols / rows;
+        self.reshape((rows, cols))
+    }
+
+    pub fn reshape_cols(mut self, cols: usize) -> Self {
+        let rows = self.rows / cols;
+        self.reshape((rows, cols))
     }
 
     pub fn iter_rows(&self) -> ChunksExact<'_, T> {
         self.array.chunks_exact(self.cols)
     }
 
-    pub fn reshape(mut self, rows: usize, cols: usize) -> Matrix<T> {
-        assert_eq!(self.rows * self.cols, rows * cols);
-        self.rows = rows;
-        self.cols = cols;
-        self
+    pub fn iter(&self) -> Iter<'_, T> {
+        self.array.iter()
     }
 
     pub fn get_at(&self, row: usize, col: usize) -> &T {
@@ -89,10 +82,38 @@ impl<T> IndexMut<usize> for Matrix<T> {
     }
 }
 
-impl<T> Deref for Matrix<T> {
-    type Target = Vec<T>;
+pub struct MatrixIter<T> {
+    matrix: Matrix<T>,
+    index: usize,
+}
 
-    fn deref(&self) -> &Self::Target {
-        &self.array
+impl<T: Copy> IntoIterator for Matrix<T> {
+    type Item = T;
+    type IntoIter = MatrixIter<T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        MatrixIter { matrix: self, index: 0 }
+    }
+}
+
+impl<T: Copy> Iterator for MatrixIter<T> {
+    type Item = T;
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.index < self.matrix.array.len() {
+            true => {
+                let current = self.index;
+                self.index += 1;
+                Some(self.matrix.array[current])
+            }
+            false => None
+        }
+    }
+}
+
+impl<T> FromIterator<T> for Matrix<T> {
+    fn from_iter<I: IntoIterator<Item=T>>(iter: I) -> Self {
+        let array = iter.into_iter().collect::<Vec<_>>();
+        let cols = array.len();
+        Matrix { array, cols, rows: 1 }
     }
 }
