@@ -1,13 +1,15 @@
+#![allow(dead_code)]
 use std::collections::HashSet;
 use crate::utils;
+use crate::utils::matrix::Matrix;
 
 
 pub fn run() -> () {
     let data = parse_data(&utils::read_lines(utils::Source::Day(10)));
 
-    println!("Day X");
+    println!("Day 10");
     println!("Part 1: {}", solve1(&data));
-    println!("Part 2: {}", solve2(&data));
+    println!("Part 2: \n{}", solve2(&data));
 }
 
 
@@ -62,14 +64,12 @@ impl Cpu {
     }
 
     fn get_signal(&self) -> (i32, i32) {
-        (self.cycle, self.cycle * self.register)
+        (self.cycle, self.register)
     }
 }
 
-
-fn get_signal(data: &[Instruction], cycles: &HashSet<i32>) -> Vec<i32> {
-    let mut signal = vec![];
-
+fn get_signal(data: &[Instruction]) -> Vec<(i32, i32)> {
+    let mut signal = vec![(1, 1)];
     let mut cpu = Cpu::new();
     for &instruction in data {
         cpu.push(instruction);
@@ -79,20 +79,33 @@ fn get_signal(data: &[Instruction], cycles: &HashSet<i32>) -> Vec<i32> {
             signal.push(cpu.get_signal());
         }
     }
-
-    signal.into_iter()
-        .filter(|(cycle, _)| cycles.contains(cycle))
-        .map(|(_, strength)| strength)
-        .collect()
+    signal
 }
 
 
 fn solve1(data: &[Instruction]) -> i32 {
-    get_signal(data, &HashSet::from([20, 60, 100, 140, 180, 220])).into_iter().sum()
+    let filter = HashSet::from([20, 60, 100, 140, 180, 220]);
+    get_signal(data).into_iter()
+        .filter(|(cycle, _)| filter.contains(cycle))
+        .map(|(cycle, register)| cycle * register)
+        .sum()
 }
 
-fn solve2(data: &[Instruction]) -> i32 {
-    2
+fn solve2(data: &[Instruction]) -> String {
+    let mut crt = Matrix::with_shape((6, 40), '.');
+
+    for (cycle, register) in get_signal(&data) {
+        let row = (cycle - 1) / 40;
+        let col = (cycle - 1) % 40;
+        if register - 1 == col || register == col || register + 1 == col {
+            crt.set_at(row as usize, col as usize, '#');
+        }
+    }
+
+    crt.iter_rows()
+        .map(String::from_iter)
+        .collect::<Vec<_>>()
+        .join("\n")
 }
 
 
@@ -115,8 +128,7 @@ fn parse_data<T: AsRef<str>>(data: &[T]) -> Vec<Instruction> {
 mod tests {
     use super::*;
 
-    static DATA_A: &[&str; 3] = &["noop", "addx 3", "addx -5"];
-    static DATA_B: &[&str; 146] = &[
+    static DATA: &[&str; 146] = &[
         "addx 15", "addx -11", "addx 6", "addx -3", "addx 5", "addx -1", "addx -8", "addx 13",
         "addx 4", "noop", "addx -1", "addx 5", "addx -1", "addx 5", "addx -1", "addx 5", "addx -1",
         "addx 5", "addx -1", "addx -35", "addx 1", "addx 24", "addx -19", "addx 1", "addx 16",
@@ -137,12 +149,11 @@ mod tests {
 
     #[test]
     fn part1() {
-        assert_eq!(13140, solve1(&parse_data(DATA_B)));
+        assert_eq!(13140, solve1(&parse_data(DATA)));
     }
 
-    #[test]
-    fn part2() {
-        let data = parse_data(DATA_A);
-        assert_eq!(2, solve2(&data));
-    }
+    // #[test]
+    // fn part2() {
+    //     println!("{}", solve2(&parse_data(DATA)));
+    // }
 }

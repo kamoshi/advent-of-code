@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 use std::ops::{Deref, Index, IndexMut};
+use std::slice::ChunksExact;
 
 
 pub struct Matrix<T> {
@@ -41,6 +42,10 @@ impl<T: Default + Clone> Matrix<T> {
 impl<T> Matrix<T> {
     pub fn shape(&self) -> (usize, usize) {
         (self.rows, self.cols)
+    }
+
+    pub fn iter_rows(&self) -> ChunksExact<'_, T> {
+        self.array.chunks_exact(self.cols)
     }
 
     pub fn reshape(mut self, rows: usize, cols: usize) -> Matrix<T> {
