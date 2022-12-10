@@ -1,9 +1,7 @@
-extern crate core;
-
 mod utils;
 mod solutions;
 
 
 fn main() {
-    solutions::day09::run();
+    solutions::day10::run();
 }
