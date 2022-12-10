@@ -98,7 +98,7 @@ fn solve2(data: &[Instruction]) -> String {
         let row = (cycle - 1) / 40;
         let col = (cycle - 1) % 40;
         if register - 1 == col || register == col || register + 1 == col {
-            crt.set_at(row as usize, col as usize, '#');
+            crt[(row as usize, col as usize)] = '#';
         }
     }
 

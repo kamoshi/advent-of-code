@@ -49,21 +49,6 @@ impl<T> Matrix<T> {
         self.array.iter()
     }
 
-    pub fn get_at(&self, row: usize, col: usize) -> &T {
-        let offset = self.get_offset(row, col);
-        &self.array[offset]
-    }
-
-    pub fn get_mut_at(&mut self, row: usize, col: usize) -> &mut T {
-        let offset = self.get_offset(row, col);
-        &mut self.array[offset]
-    }
-
-    pub fn set_at(&mut self, row: usize, col: usize, value: T) {
-        let offset = self.get_offset(row, col);
-        self.array[offset] = value;
-    }
-
     pub fn cell_indices(&self) -> impl Iterator<Item = (usize, usize)> + '_ {
         (0..self.rows).into_iter()
             .flat_map(|row| (0..self.cols).into_iter().map(move |col| (row, col)))
