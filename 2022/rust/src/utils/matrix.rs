@@ -20,6 +20,7 @@ impl<T: Default + Clone> Matrix<T> {
 }
 
 impl<T> Matrix<T> {
+    #[inline(always)]
     pub fn shape(&self) -> (usize, usize) {
         (self.rows, self.cols)
     }
@@ -30,12 +31,12 @@ impl<T> Matrix<T> {
         self
     }
 
-    pub fn reshape_rows(mut self, rows: usize) -> Self {
+    pub fn reshape_rows(self, rows: usize) -> Self {
         let cols = self.cols / rows;
         self.reshape((rows, cols))
     }
 
-    pub fn reshape_cols(mut self, cols: usize) -> Self {
+    pub fn reshape_cols(self, cols: usize) -> Self {
         let rows = self.rows / cols;
         self.reshape((rows, cols))
     }
@@ -63,21 +64,29 @@ impl<T> Matrix<T> {
         self.array[offset] = value;
     }
 
+    pub fn cell_indices(&self) -> impl Iterator<Item = (usize, usize)> + '_ {
+        (0..self.rows).into_iter()
+            .flat_map(|row| (0..self.cols).into_iter().map(move |col| (row, col)))
+    }
+
+    #[inline(always)]
     fn get_offset(&self, row: usize, col: usize) -> usize {
         row * self.cols + col
     }
 }
 
-impl<T> Index<usize> for Matrix<T> {
+impl<T> Index<(usize, usize)> for Matrix<T> {
     type Output = T;
 
-    fn index(&self, index: usize) -> &Self::Output {
+    fn index(&self, (row, col): (usize, usize)) -> &Self::Output {
+        let index = self.get_offset(row, col);
         &self.array[index]
     }
 }
 
-impl<T> IndexMut<usize> for Matrix<T> {
-    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+impl<T> IndexMut<(usize, usize)> for Matrix<T> {
+    fn index_mut(&mut self, (row, col): (usize, usize)) -> &mut Self::Output {
+        let index = self.get_offset(row, col);
         &mut self.array[index]
     }
 }

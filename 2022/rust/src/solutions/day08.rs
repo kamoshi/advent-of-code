@@ -17,11 +17,11 @@ fn mark_visible(
     data: &Matrix<i32>,
     visible: &mut Matrix<bool>,
     last_height: &mut i32,
-    (row, col): (usize, usize)
+    index: (usize, usize)
 ) {
-    let height = *data.get_at(row, col);
+    let height = data[index];
     if height > *last_height {
-        visible.set_at(row, col, true);
+        visible[index] = true;
         *last_height = height;
     }
 }
@@ -59,45 +59,43 @@ fn solve1(data: &Matrix<i32>) -> usize {
 }
 
 fn find_scores(data: &Matrix<i32>) -> Matrix<i32> {
+    let mut scores = Matrix::with_shape(data.shape(), 1);
+
     let (rows, cols) = data.shape();
-    let mut scores = Matrix::with_shape((rows, cols), 1);
+    for (row, col) in data.cell_indices() {
+        let mut score = 1;
+        let current = data[(row, col)];
 
-    for row in 0..rows {
-        for col in 0..cols {
-            let mut score = 1;
-            let current = *data.get_at(row, col);
+        let mut temp = 0;
+        for c in (0..col).rev() {
+            temp += 1;
+            if data[(row, c)] >= current { break };
+        }
+        score *= temp;
 
-            let mut temp = 0;
-            for c in (0..col).rev() {
-                temp += 1;
-                if *data.get_at(row, c) >= current { break };
-            }
-            score *= temp;
+        let mut temp = 0;
+        for c in (col+1)..cols {
+            temp += 1;
+            if data[(row, c)] >= current { break };
+        }
+        score *= temp;
 
-            let mut temp = 0;
-            for c in (col+1)..cols {
-                temp += 1;
-                if *data.get_at(row, c) >= current { break };
-            }
-            score *= temp;
+        let mut temp = 0;
+        for r in (0..row).rev() {
+            temp += 1;
+            if data[(r, col)] >= current { break };
+        }
+        score *= temp;
 
-            let mut temp = 0;
-            for r in (0..row).rev() {
-                temp += 1;
-                if *data.get_at(r, col) >= current { break };
-            }
-            score *= temp;
+        let mut temp = 0;
+        for r in (row+1)..rows {
+            temp += 1;
+            if data[(r, col)] >= current { break };
+        }
+        score *= temp;
 
-            let mut temp = 0;
-            for r in (row+1)..rows {
-                temp += 1;
-                if *data.get_at(r, col) >= current { break };
-            }
-            score *= temp;
-
-            scores.set_at(row, col, score);
-        };
-    };
+        scores[(row, col)] = score;
+    }
 
     scores
 }
@@ -129,16 +127,15 @@ mod tests {
 
     #[test]
     fn part1() {
-        let data = parse_data(DATA);
-        assert_eq!(21, solve1(&data));
+        assert_eq!(21, solve1(&parse_data(DATA)));
     }
 
     #[test]
     fn part2() {
         let data = parse_data(DATA);
         let scores = find_scores(&data);
-        assert_eq!(4, *scores.get_at(1, 2));
-        assert_eq!(8, *scores.get_at(3, 2));
+        assert_eq!(4, scores[(1, 2)]);
+        assert_eq!(8, scores[(3, 2)]);
         assert_eq!(8, solve2(&data));
     }
 }
