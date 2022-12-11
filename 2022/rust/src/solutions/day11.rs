@@ -67,12 +67,14 @@ fn find_inspects(data: &Vec<Monkey>, rounds: i32, divide: bool) -> BinaryHeap<i6
 }
 
 fn solve1(data: &Vec<Monkey>) -> i64 {
-    find_inspects(&data, 20, true).iter().take(2).product()
+    find_inspects(&data, 20, true)
+        .into_sorted_vec().iter().rev().take(2).product()
 }
 
 // brb, speedrunning modular arithmetic course to solve this puzzle
 fn solve2(data: &Vec<Monkey>) -> i64 {
-    find_inspects(&data, 10000, false).iter().take(2).product()
+    find_inspects(&data, 10000, false)
+        .into_sorted_vec().iter().rev().take(2).product()
 }
 
 
