@@ -35,9 +35,10 @@ fn transfer_items(source: &mut VecDeque<i64>, destination: &mut VecDeque<i64>) {
     }
 }
 
-fn find_inspects(data: &Vec<Monkey>, rounds: i32) -> BinaryHeap<i64> {
+fn find_inspects(data: &Vec<Monkey>, rounds: i32, divide: bool) -> BinaryHeap<i64> {
     let mut monkeys: Vec<VecDeque<i64>> = data.iter().map(|m| m.items.iter().copied().collect()).collect();
     let mut inspections: HashMap<usize, i64> = HashMap::new();
+    let all_tests = data.iter().fold(1, |acc, next| acc * next.test);
 
     let mut buffer_yeah: VecDeque<i64> = VecDeque::new();
     let mut buffer_nope: VecDeque<i64> = VecDeque::new();
@@ -50,7 +51,8 @@ fn find_inspects(data: &Vec<Monkey>, rounds: i32) -> BinaryHeap<i64> {
                     Operation::OldPlus(num) => old + num,
                     Operation::OldTimes(num) => old * num,
                 };
-                let worry = worry / 3;
+                let worry = if divide { worry / 3 } else { worry };
+                let worry = worry % all_tests;
                 match worry % data[i].test == 0 {
                     true => buffer_yeah.push_back(worry),
                     false => buffer_nope.push_back(worry),
@@ -65,14 +67,12 @@ fn find_inspects(data: &Vec<Monkey>, rounds: i32) -> BinaryHeap<i64> {
 }
 
 fn solve1(data: &Vec<Monkey>) -> i64 {
-    let mut heap = find_inspects(&data, 20);
-    heap.pop().unwrap() * heap.pop().unwrap()
+    find_inspects(&data, 20, true).iter().take(2).product()
 }
 
 // brb, speedrunning modular arithmetic course to solve this puzzle
 fn solve2(data: &Vec<Monkey>) -> i64 {
-    let mut heap = find_inspects(&data, 10000);
-    heap.pop().unwrap() * heap.pop().unwrap()
+    find_inspects(&data, 10000, false).iter().take(2).product()
 }
 
 
