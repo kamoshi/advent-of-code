@@ -67,7 +67,7 @@ fn solve2(data: &Vec<Monkey>) -> i64 {
 }
 
 
-fn get_next_number(re: &Regex, chunk: &mut dyn Iterator<Item=&str>) -> i64 {
+fn get_next_number<'a, 'b>(re: &Regex, chunk: &'a mut impl Iterator<Item=&'b str>) -> i64 {
     re.find(chunk.next().unwrap()).unwrap()
         .as_str()
         .parse().unwrap()
