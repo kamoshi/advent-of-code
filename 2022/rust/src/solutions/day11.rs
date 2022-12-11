@@ -35,10 +35,6 @@ fn transfer_items(source: &mut VecDeque<i64>, destination: &mut VecDeque<i64>) {
     }
 }
 
-fn simplify_factor(n: i64) -> i64 {
-    n
-}
-
 fn find_inspects(data: &Vec<Monkey>, rounds: i32) -> BinaryHeap<i64> {
     let mut monkeys: Vec<VecDeque<i64>> = data.iter().map(|m| m.items.iter().copied().collect()).collect();
     let mut inspections: HashMap<usize, i64> = HashMap::new();
@@ -73,6 +69,7 @@ fn solve1(data: &Vec<Monkey>) -> i64 {
     heap.pop().unwrap() * heap.pop().unwrap()
 }
 
+// brb, speedrunning modular arithmetic course to solve this puzzle
 fn solve2(data: &Vec<Monkey>) -> i64 {
     let mut heap = find_inspects(&data, 10000);
     heap.pop().unwrap() * heap.pop().unwrap()
