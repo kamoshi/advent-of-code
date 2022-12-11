@@ -15,33 +15,37 @@ pub fn run() -> () {
 #[derive(Copy, Clone)]
 enum Operation {
     OldTimesOld,
-    OldPlus(i32),
-    OldTimes(i32),
+    OldPlus(i64),
+    OldTimes(i64),
 }
 
 struct Monkey {
-    items: Vec<i32>,
+    items: Vec<i64>,
     operation: Operation,
-    test: i32,
+    test: i64,
     yeah: usize,
     nope: usize,
 }
 
 
 #[inline(always)]
-fn transfer_items(source: &mut VecDeque<i32>, destination: &mut VecDeque<i32>) {
+fn transfer_items(source: &mut VecDeque<i64>, destination: &mut VecDeque<i64>) {
     while let Some(item) = source.pop_front() {
         destination.push_back(item)
     }
 }
 
-fn solve1(data: &Vec<Monkey>) -> i32 {
-    let mut monkeys: Vec<VecDeque<i32>> = data.iter().map(|m| m.items.iter().copied().collect()).collect();
-    let mut inspections: HashMap<usize, i32> = HashMap::new();
+fn simplify_factor(n: i64) -> i64 {
+    n
+}
 
-    let mut buffer_yeah: VecDeque<i32> = VecDeque::new();
-    let mut buffer_nope: VecDeque<i32> = VecDeque::new();
-    for _ in 0..20 {
+fn find_inspects(data: &Vec<Monkey>, rounds: i32) -> BinaryHeap<i64> {
+    let mut monkeys: Vec<VecDeque<i64>> = data.iter().map(|m| m.items.iter().copied().collect()).collect();
+    let mut inspections: HashMap<usize, i64> = HashMap::new();
+
+    let mut buffer_yeah: VecDeque<i64> = VecDeque::new();
+    let mut buffer_nope: VecDeque<i64> = VecDeque::new();
+    for _ in 0..rounds {
         for i in 0..monkeys.len() {
             while let Some(old) = monkeys[i].pop_front() {
                 *inspections.entry(i).or_insert(0) += 1;
@@ -60,16 +64,22 @@ fn solve1(data: &Vec<Monkey>) -> i32 {
             transfer_items(&mut buffer_nope, &mut monkeys[data[i].nope]);
         }
     };
-    let mut heap = BinaryHeap::from_iter(inspections.iter().map(|(_, &b)| b));
+
+    BinaryHeap::from_iter(inspections.iter().map(|(_, &b)| b))
+}
+
+fn solve1(data: &Vec<Monkey>) -> i64 {
+    let mut heap = find_inspects(&data, 20);
     heap.pop().unwrap() * heap.pop().unwrap()
 }
 
-fn solve2(data: &Vec<Monkey>) -> i32 {
-    2
+fn solve2(data: &Vec<Monkey>) -> i64 {
+    let mut heap = find_inspects(&data, 10000);
+    heap.pop().unwrap() * heap.pop().unwrap()
 }
 
 
-fn get_next_number(re: &Regex, chunk: &mut dyn Iterator<Item=&str>) -> i32 {
+fn get_next_number(re: &Regex, chunk: &mut dyn Iterator<Item=&str>) -> i64 {
     re.find(chunk.next().unwrap()).unwrap()
         .as_str()
         .parse().unwrap()
@@ -153,7 +163,6 @@ mod tests {
 
     #[test]
     fn part2() {
-        let data = parse_data(DATA);
-        assert_eq!(2, solve2(&data));
+        assert_eq!(2713310158, solve2(&parse_data(DATA)));
     }
 }
