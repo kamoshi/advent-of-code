@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use std::collections::{BinaryHeap, HashMap, VecDeque};
 use regex::Regex;
 use crate::utils;
@@ -71,7 +72,6 @@ fn solve1(data: &Vec<Monkey>) -> i64 {
         .into_sorted_vec().iter().rev().take(2).product()
 }
 
-// brb, speedrunning modular arithmetic course to solve this puzzle
 fn solve2(data: &Vec<Monkey>) -> i64 {
     find_inspects(&data, 10000, false)
         .into_sorted_vec().iter().rev().take(2).product()
