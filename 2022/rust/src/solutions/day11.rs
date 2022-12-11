@@ -29,20 +29,11 @@ struct Monkey {
 }
 
 
-#[inline(always)]
-fn transfer_items(source: &mut VecDeque<i64>, destination: &mut VecDeque<i64>) {
-    while let Some(item) = source.pop_front() {
-        destination.push_back(item)
-    }
-}
-
 fn find_inspects(data: &Vec<Monkey>, rounds: i32, divide: bool) -> BinaryHeap<i64> {
     let mut monkeys: Vec<VecDeque<i64>> = data.iter().map(|m| m.items.iter().copied().collect()).collect();
     let mut inspections: HashMap<usize, i64> = HashMap::new();
     let all_tests = data.iter().fold(1, |acc, next| acc * next.test);
 
-    let mut buffer_yeah: VecDeque<i64> = VecDeque::new();
-    let mut buffer_nope: VecDeque<i64> = VecDeque::new();
     for _ in 0..rounds {
         for i in 0..monkeys.len() {
             while let Some(old) = monkeys[i].pop_front() {
@@ -55,12 +46,10 @@ fn find_inspects(data: &Vec<Monkey>, rounds: i32, divide: bool) -> BinaryHeap<i6
                 let worry = if divide { worry / 3 } else { worry };
                 let worry = worry % all_tests;
                 match worry % data[i].test == 0 {
-                    true => buffer_yeah.push_back(worry),
-                    false => buffer_nope.push_back(worry),
+                    true => monkeys[data[i].yeah].push_back(worry),
+                    false => monkeys[data[i].nope].push_back(worry),
                 }
             }
-            transfer_items(&mut buffer_yeah, &mut monkeys[data[i].yeah]);
-            transfer_items(&mut buffer_nope, &mut monkeys[data[i].nope]);
         }
     };
 
