@@ -90,7 +90,7 @@ fn solve1((start, goal, grid): &Data) -> usize {
 
 
 fn solve2((_, goal, grid): &Data) -> usize {
-    // very ineffective! ideally we should execute the algorithm just once
+    // TODO: very ineffective! ideally we should execute the algorithm just once
     grid.cell_indices()
         .filter_map(|index| match grid[index] == 0 {
             true => Some(index),
