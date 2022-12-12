@@ -47,19 +47,8 @@ fn manhattan(start: (usize, usize), goal: (usize, usize)) -> i32 {
     (start.0.abs_diff(goal.0) + start.1.abs_diff(goal.1)) as i32
 }
 
-fn unwind_path(
-    parent_map: &HashMap<(usize, usize), (usize, usize)>,
-    start: (usize, usize),
-    goal: (usize, usize),
-) -> Option<Vec<(usize, usize)>> {
-    let mut path = vec![goal];
-    while !path.last()?.eq(&start) {
-        path.push(*parent_map.get(path.last()?)?);
-    }
-    Some(path)
-}
 
-fn a_star(start: (usize, usize), goal: (usize, usize), grid: &Matrix<u8>) -> Vec<(usize, usize)> {
+fn a_star(start: (usize, usize), goal: (usize, usize), grid: &Matrix<u8>) -> Option<Vec<(usize, usize)>> {
     let mut frontier: BinaryHeap<State> = BinaryHeap::new();
     let mut parent: HashMap<(usize, usize), (usize, usize)> = HashMap::new();
     let mut cost: HashMap<(usize, usize), i32> = HashMap::from([(start, 0)]);
@@ -85,15 +74,34 @@ fn a_star(start: (usize, usize), goal: (usize, usize), grid: &Matrix<u8>) -> Vec
         }
     }
 
-    unwind_path(&parent, start, goal).unwrap()
+    let mut path = vec![goal];
+    while !path.last()?.eq(&start) {
+        path.push(*parent.get(path.last()?)?);
+    }
+    Some(path)
 }
 
 fn solve1((start, goal, grid): &Data) -> usize {
-    a_star(*start, *goal, grid).len() - 1
+    a_star(*start, *goal, grid).unwrap().len() - 1
 }
 
-fn solve2(data: &Data) -> i32 {
-    2
+fn find_low_points(grid: &Matrix<u8>) -> Vec<(usize, usize)> {
+    grid.cell_indices()
+        .filter_map(|index| match grid[index] == 0 {
+            true => Some(index),
+            false => None
+        })
+        .collect()
+}
+
+fn solve2((_, goal, grid): &Data) -> usize {
+    find_low_points(grid)
+        .into_iter()
+        .filter_map(|start|
+            a_star(start, *goal, grid).map(|path| path.len() - 1)
+        )
+        .min()
+        .unwrap()
 }
 
 
@@ -138,6 +146,6 @@ mod tests {
 
     #[test]
     fn part2() {
-        assert_eq!(2, solve2(&parse_data(DATA)));
+        assert_eq!(29, solve2(&parse_data(DATA)));
     }
 }
