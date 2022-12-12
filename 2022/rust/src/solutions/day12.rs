@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashMap};
 use crate::utils;
@@ -33,6 +34,7 @@ impl PartialOrd for State {
         Some(self.cmp(other))
     }
 }
+
 
 fn neighbours((row, col): (usize, usize), (rows, cols): (usize, usize)) -> Vec<(usize, usize)> {
     let mut ns = Vec::with_capacity(4);
@@ -74,9 +76,10 @@ fn a_star(start: (usize, usize), goal: (usize, usize), grid: &Matrix<u8>) -> Opt
         }
     }
 
+    // unwind path
     let mut path = vec![goal];
-    while !path.last()?.eq(&start) {
-        path.push(*parent.get(path.last()?)?);
+    while !path.last().unwrap().eq(&start) {
+        path.push(*parent.get(path.last().unwrap())?);
     }
     Some(path)
 }
@@ -85,18 +88,13 @@ fn solve1((start, goal, grid): &Data) -> usize {
     a_star(*start, *goal, grid).unwrap().len() - 1
 }
 
-fn find_low_points(grid: &Matrix<u8>) -> Vec<(usize, usize)> {
+
+fn solve2((_, goal, grid): &Data) -> usize {
     grid.cell_indices()
         .filter_map(|index| match grid[index] == 0 {
             true => Some(index),
             false => None
         })
-        .collect()
-}
-
-fn solve2((_, goal, grid): &Data) -> usize {
-    find_low_points(grid)
-        .into_iter()
         .filter_map(|start|
             a_star(start, *goal, grid).map(|path| path.len() - 1)
         )
