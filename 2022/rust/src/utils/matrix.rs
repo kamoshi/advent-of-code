@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+use std::fmt;
 use std::ops::{Index, IndexMut};
 use std::slice::{ChunksExact, Iter};
 
@@ -111,3 +112,16 @@ impl<T> FromIterator<T> for Matrix<T> {
         Matrix { array, cols, rows: 1 }
     }
 }
+
+impl<T> fmt::Display for Matrix<T> where T: fmt::Display {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for row in self.iter_rows() {
+            for item in row {
+                write!(f, "{}", item)?
+            };
+            write!(f, "\n")?;
+        };
+        Ok(())
+    }
+}
+
