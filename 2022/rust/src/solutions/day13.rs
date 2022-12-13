@@ -1,4 +1,6 @@
+#![allow(dead_code)]
 use std::cmp::Ordering;
+use std::collections::BinaryHeap;
 use crate::utils;
 
 
@@ -54,15 +56,30 @@ impl PartialOrd for Packet {
 fn solve1(data: &[(Packet, Packet)]) -> usize {
     data.iter()
         .enumerate()
-        .flat_map(|(index, (left, right))| match left.cmp(right) {
-            Ordering::Less => Some(index + 1),
-            _ => None
+        .flat_map(|(index, (left, right))| match left < right {
+            true => Some(index + 1),
+            false => None
         })
         .sum()
 }
 
-fn solve2(data: &[(Packet, Packet)]) -> i32 {
-    2
+fn solve2(data: &[(Packet, Packet)]) -> usize {
+    let dividers: &[Packet] = &[
+        recursive_parse("[[2]]"),
+        recursive_parse("[[6]]"),
+    ];
+
+    let sorted = data.iter()
+        .fold(BinaryHeap::from_iter(dividers.iter()), |mut acc, (left, right)| {
+            acc.push(left);
+            acc.push(right);
+            acc
+        })
+        .into_sorted_vec();
+
+    let d1 = sorted.binary_search(&&dividers[0]).unwrap() + 1;
+    let d2 = sorted.binary_search(&&dividers[1]).unwrap() + 1;
+    d1 * d2
 }
 
 
@@ -96,9 +113,7 @@ fn find_tokens(s: &str) -> Vec<String> {
 
 fn recursive_parse(s: &str) -> Packet {
     match s.starts_with("[") {
-        true => {
-            Packet::List(find_tokens(s).into_iter().map(|t| recursive_parse(&t)).collect())
-        },
+        true => Packet::List(find_tokens(s).into_iter().map(|t| recursive_parse(&t)).collect()),
         false => Packet::Integer(s.parse().unwrap())
     }
 }
@@ -135,6 +150,6 @@ mod tests {
 
     #[test]
     fn part2() {
-        assert_eq!(2, solve2(&parse_data(DATA)));
+        assert_eq!(140, solve2(&parse_data(DATA)));
     }
 }
