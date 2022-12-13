@@ -13,7 +13,7 @@ pub fn run() -> () {
 }
 
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Eq, PartialEq)]
 enum Packet {
     List(Vec<Packet>),
     Integer(i32),
