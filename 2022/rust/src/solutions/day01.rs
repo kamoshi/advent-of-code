@@ -45,12 +45,11 @@ fn parse_data<T: AsRef<str>>(data: &[T]) -> Vec<Vec<i32>> {
     data.iter()
         .fold(vec![vec![]], | mut acc, next| {
             let s = next.as_ref();
-            if s.len() == 0 {
-                acc.push(Vec::new())
-            }
-            else {
-                let number: i32 = s.parse().expect("Parse error");
-                acc.last_mut().and_then(|last| Some(last.push(number)));
+            match s.len() == 0 {
+                true => acc.push(Vec::new()),
+                false => {
+                    acc.last_mut().and_then(|last| Some(last.push(s.parse().unwrap())));
+                }
             }
             acc
         })
