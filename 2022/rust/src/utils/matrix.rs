@@ -8,15 +8,26 @@ pub struct Matrix<T> {
     array: Vec<T>,
     rows: usize,
     cols: usize,
+    offset_r: usize,
+    offset_c: usize,
 }
 
 impl<T: Default + Clone> Matrix<T> {
     pub fn new(rows: usize, cols: usize) -> Self {
-        Self { rows, cols, array: vec![Default::default(); rows * cols] }
+        Self { rows, cols, array: vec![Default::default(); rows * cols], offset_r: 0, offset_c: 0 }
+    }
+}
+
+impl<T: Clone> Matrix<T> {
+    pub fn with_shape((rows, cols): (usize, usize), value: T) -> Self {
+        Self { rows, cols, array: vec![value.clone(); rows * cols], offset_r: 0, offset_c: 0 }
     }
 
-    pub fn with_shape((rows, cols): (usize, usize), value: T) -> Self {
-        Self { rows, cols, array: vec![value.clone(); rows * cols] }
+    pub fn with_bounds((min_r, min_c): (usize, usize), (max_r, max_c): (usize, usize), value: T) -> Self {
+        assert!(max_r > min_r && max_c > min_c, "Min bound has to be lower than max bound");
+        let (rows, cols) = (max_r - min_r + 1, max_c - min_c + 1);
+        let (offset_r, offset_c) = (min_r, min_c);
+        Self { rows, cols, array: vec![value.clone(); rows * cols], offset_r, offset_c }
     }
 }
 
@@ -24,6 +35,13 @@ impl<T> Matrix<T> {
     #[inline(always)]
     pub fn shape(&self) -> (usize, usize) {
         (self.rows, self.cols)
+    }
+
+    pub fn bounds(&self) -> ((usize, usize), (usize, usize)) {
+        (
+            (self.offset_r, self.offset_c),
+            (self.offset_r + self.rows, self.offset_c + self.cols)
+        )
     }
 
     pub fn reshape(mut self, (rows, cols): (usize, usize)) -> Self {
@@ -51,13 +69,15 @@ impl<T> Matrix<T> {
     }
 
     pub fn cell_indices(&self) -> impl Iterator<Item = (usize, usize)> + '_ {
-        (0..self.rows).into_iter()
-            .flat_map(|row| (0..self.cols).into_iter().map(move |col| (row, col)))
+        let row_range = self.offset_r..(self.rows + self.offset_r);
+        let col_range = self.offset_c..(self.cols + self.offset_c);
+        row_range.into_iter()
+            .flat_map(move |row| col_range.clone().into_iter().map(move |col| (row, col)))
     }
 
     #[inline(always)]
     fn get_offset(&self, row: usize, col: usize) -> usize {
-        row * self.cols + col
+        (row - self.offset_r) * self.cols + (col - self.offset_c)
     }
 }
 
@@ -109,7 +129,7 @@ impl<T> FromIterator<T> for Matrix<T> {
     fn from_iter<I: IntoIterator<Item=T>>(iter: I) -> Self {
         let array = iter.into_iter().collect::<Vec<_>>();
         let cols = array.len();
-        Matrix { array, cols, rows: 1 }
+        Matrix { array, cols, rows: 1, offset_r: 0, offset_c: 0  }
     }
 }
 

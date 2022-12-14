@@ -47,8 +47,9 @@ fn parse_data<T: AsRef<str>>(data: &[T]) -> Vec<Vec<i32>> {
             let s = next.as_ref();
             match s.len() == 0 {
                 true => acc.push(Vec::new()),
-                false => acc.last_mut()
-                    .and_then(|last| Some(last.push(s.parse().unwrap())))
+                false => {
+                    acc.last_mut().and_then(|last| Some(last.push(s.parse().unwrap())));
+                }
             }
             acc
         })

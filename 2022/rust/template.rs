@@ -28,7 +28,9 @@ fn parse_data<T: AsRef<str>>(data: &[T]) -> () {
 mod tests {
     use super::*;
 
-    static DATA: &[&str; 1] = [""];
+    static DATA: &[&str] = &[
+        ""
+    ];
 
     #[test]
     fn part1() {
