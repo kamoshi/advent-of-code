@@ -29,19 +29,29 @@ impl<T: Clone> Matrix<T> {
         let (offset_r, offset_c) = (min_r, min_c);
         Self { rows, cols, array: vec![value.clone(); rows * cols], offset_r, offset_c }
     }
+
+    pub fn draw_line(&mut self, (r1, c1): (usize, usize), (r2, c2): (usize, usize), value: T) {
+        let (min_r, max_r) = (r1.min(r2), r1.max(r2));
+        let (min_c, max_c) = (c1.min(c2), c1.max(c2));
+        match (r1 == r2, c1 == c2) {
+            (true, true) => self[(r1, c1)] = value.clone(),
+            (true, _) => (min_c..=max_c).into_iter()
+                .for_each(|c| self[(r1, c)] = value.clone()),
+            (_, true) => (min_r..=max_r).into_iter()
+                .for_each(|r| self[(r, c1)] = value.clone()),
+            _ => unimplemented!(),
+        };
+    }
 }
 
 impl<T> Matrix<T> {
     #[inline(always)]
-    pub fn shape(&self) -> (usize, usize) {
+    pub fn get_shape(&self) -> (usize, usize) {
         (self.rows, self.cols)
     }
 
-    pub fn bounds(&self) -> ((usize, usize), (usize, usize)) {
-        (
-            (self.offset_r, self.offset_c),
-            (self.offset_r + self.rows, self.offset_c + self.cols)
-        )
+    pub fn get_bounds(&self) -> ((usize, usize), (usize, usize)) {
+        ((self.offset_r, self.offset_c), (self.offset_r + self.rows, self.offset_c + self.cols))
     }
 
     pub fn reshape(mut self, (rows, cols): (usize, usize)) -> Self {

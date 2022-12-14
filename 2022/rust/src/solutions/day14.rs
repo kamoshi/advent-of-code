@@ -28,6 +28,7 @@ impl Display for Tile {
     }
 }
 
+
 fn get_data_bounds(data: &[Vec<(usize, usize)>]) -> (usize, (usize, usize)) {
     data.iter()
         .flatten()
@@ -41,29 +42,18 @@ fn fill_grid_walls(data: &[Vec<(usize, usize)>], grid: &mut Matrix<Tile>) {
         let mut path_iter = path.iter();
         path_iter.next()
             .map(|&start| path_iter
-                .fold(start, |(prev_r, prev_c), &(next_r, next_c)| {
-                    let (min_r, max_r) = (prev_r.min(next_r), prev_r.max(next_r));
-                    let (min_c, max_c) = (prev_c.min(next_c), prev_c.max(next_c));
-                    match prev_r == next_r {
-                        true => (min_c..=max_c).into_iter()
-                            .for_each(|c| grid[(prev_r, c)] = Tile::Rock),
-                        false => (min_r..=max_r).into_iter()
-                            .for_each(|r| grid[(r, prev_c)] = Tile::Rock),
-                    };
-                    (next_r, next_c)
+                .fold(start, |prev, &next| {
+                    grid.draw_line(prev, next, Tile::Rock);
+                    next
                 })
-            )
-            .unwrap();
+            );
     }
 }
 
-
 fn drop_sand(grid: &mut Matrix<Tile>, (row, col): (usize, usize)) -> Option<(usize, usize)> {
-    if grid[(row, col)] != Tile::Empty {
-        return None;
-    }
+    if grid[(row, col)] != Tile::Empty { return None; }
 
-    let ((_, min_c), (max_r, max_c)) = grid.bounds();
+    let ((_, min_c), (max_r, max_c)) = grid.get_bounds();
     for r in row..max_r {
         if grid[(r, col)] != Tile::Empty {
             return if col == min_c {
@@ -84,7 +74,6 @@ fn drop_sand(grid: &mut Matrix<Tile>, (row, col): (usize, usize)) -> Option<(usi
     None
 }
 
-
 fn solve1(data: &[Vec<(usize, usize)>]) -> i32 {
     let (min_c, max) = get_data_bounds(data);
     let mut grid = Matrix::with_bounds((0, min_c), max, Tile::Empty);
@@ -94,7 +83,6 @@ fn solve1(data: &[Vec<(usize, usize)>]) -> i32 {
     while let Some(_) = drop_sand(&mut grid, (0, 500)) {
         sand_count += 1;
     }
-
     sand_count
 }
 
@@ -114,7 +102,6 @@ fn solve2(data: &[Vec<(usize, usize)>]) -> i32 {
     while let Some(_) = drop_sand(&mut grid, (0, 500)) {
         sand_count += 1;
     }
-
     sand_count
 }
 

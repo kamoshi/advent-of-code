@@ -59,7 +59,7 @@ fn a_star(start: (usize, usize), goal: (usize, usize), grid: &Matrix<u8>) -> Opt
     while let Some(State { position: current, .. }) = frontier.pop() {
         if current == goal { break };
 
-        for neighbour in neighbours(current, grid.shape()) {
+        for neighbour in neighbours(current, grid.get_shape()) {
             // unreachable
             let level_diff = grid[neighbour].abs_diff(grid[current]);
             if grid[neighbour] > grid[current] && level_diff > 1 { continue };

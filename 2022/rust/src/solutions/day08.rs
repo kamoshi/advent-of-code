@@ -27,7 +27,7 @@ fn mark_visible(
 }
 
 fn create_mask(data: &Matrix<i32>) -> Matrix<bool> {
-    let (rows, cols) = data.shape();
+    let (rows, cols) = data.get_shape();
     let mut visible = Matrix::with_shape((rows, cols), false);
 
     for row in 0..rows {
@@ -59,9 +59,9 @@ fn solve1(data: &Matrix<i32>) -> usize {
 }
 
 fn find_scores(data: &Matrix<i32>) -> Matrix<i32> {
-    let mut scores = Matrix::with_shape(data.shape(), 1);
+    let mut scores = Matrix::with_shape(data.get_shape(), 1);
 
-    let (rows, cols) = data.shape();
+    let (rows, cols) = data.get_shape();
     for (row, col) in data.cell_indices() {
         let mut score = 1;
         let current = data[(row, col)];
