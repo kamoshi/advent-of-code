@@ -28,13 +28,15 @@ impl Display for Tile {
     }
 }
 
-fn create_grid(data: &[Vec<(usize, usize)>]) -> Matrix<Tile> {
-    let (min_c, max) = data.iter()
+fn get_data_bounds(data: &[Vec<(usize, usize)>]) -> (usize, (usize, usize)) {
+    data.iter()
         .flatten()
         .fold((usize::MAX, (usize::MIN, usize::MIN)), |(min_c, (max_r, max_c)), &(r, c)| (
             min_c.min(c), (max_r.max(r), max_c.max(c))
-        ));
-    let mut grid = Matrix::with_bounds((0, min_c), max, Tile::Empty);
+        ))
+}
+
+fn fill_grid_walls(data: &[Vec<(usize, usize)>], grid: &mut Matrix<Tile>) {
     for path in data.iter() {
         let mut path_iter = path.iter();
         path_iter.next()
@@ -52,12 +54,15 @@ fn create_grid(data: &[Vec<(usize, usize)>]) -> Matrix<Tile> {
                 })
             )
             .unwrap();
-    };
-    grid
+    }
 }
 
 
 fn drop_sand(grid: &mut Matrix<Tile>, (row, col): (usize, usize)) -> Option<(usize, usize)> {
+    if grid[(row, col)] != Tile::Empty {
+        return None;
+    }
+
     let ((_, min_c), (max_r, max_c)) = grid.bounds();
     for r in row..max_r {
         if grid[(r, col)] != Tile::Empty {
@@ -81,7 +86,9 @@ fn drop_sand(grid: &mut Matrix<Tile>, (row, col): (usize, usize)) -> Option<(usi
 
 
 fn solve1(data: &[Vec<(usize, usize)>]) -> i32 {
-    let mut grid = create_grid(data);
+    let (min_c, max) = get_data_bounds(data);
+    let mut grid = Matrix::with_bounds((0, min_c), max, Tile::Empty);
+    fill_grid_walls(data, &mut grid);
 
     let mut sand_count = 0;
     while let Some(_) = drop_sand(&mut grid, (0, 500)) {
@@ -92,7 +99,23 @@ fn solve1(data: &[Vec<(usize, usize)>]) -> i32 {
 }
 
 fn solve2(data: &[Vec<(usize, usize)>]) -> i32 {
-    2
+    let (min_c, (max_r, max_c)) = get_data_bounds(data);
+    let new_max_r = max_r + 2;
+    let new_min_c = min_c - (max_r + 2);
+    let new_max_c = max_c + (max_r + 2);
+    let mut grid = Matrix::with_bounds((0, new_min_c), (new_max_r, new_max_c), Tile::Empty);
+    fill_grid_walls(data, &mut grid);
+
+    for c in new_min_c..=new_max_c {
+        grid[(new_max_r, c)] = Tile::Rock;
+    }
+
+    let mut sand_count = 0;
+    while let Some(_) = drop_sand(&mut grid, (0, 500)) {
+        sand_count += 1;
+    }
+
+    sand_count
 }
 
 
@@ -129,7 +152,6 @@ mod tests {
 
     #[test]
     fn part2() {
-        let data = parse_data(DATA);
-        assert_eq!(2, solve2(&data));
+        assert_eq!(93, solve2(&parse_data(DATA)));
     }
 }
