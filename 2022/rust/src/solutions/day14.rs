@@ -1,5 +1,4 @@
 #![allow(dead_code)]
-use std::fmt::{Display, Formatter};
 use regex::Regex;
 use crate::utils;
 use crate::utils::matrix::Matrix;
@@ -17,17 +16,6 @@ pub fn run() -> () {
 #[repr(u8)]
 #[derive(Copy, Clone, PartialEq)]
 enum Tile { Empty, Rock, Sand }
-
-impl Display for Tile {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Tile::Empty => write!(f, ".")?,
-            Tile::Rock => write!(f, "#")?,
-            Tile::Sand => write!(f, "o")?,
-        };
-        Ok(())
-    }
-}
 
 
 fn get_data_bounds(data: &[Vec<(usize, usize)>]) -> (usize, (usize, usize)) {
