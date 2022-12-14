@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use std::fmt::{Display, Formatter};
 use regex::Regex;
 use crate::utils;
