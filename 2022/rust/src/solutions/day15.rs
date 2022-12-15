@@ -1,26 +1,25 @@
-use std::collections::HashMap;
-use regex::Regex;
+use std::collections::{HashMap, HashSet};
+use regex::{CaptureMatches, Regex};
 use crate::utils;
-use crate::utils::matrix::Matrix;
 
 
 pub fn run() -> () {
     let data = parse_data(&utils::read_lines(utils::Source::Day(15)));
 
     println!("Day 15");
-    println!("Part 1: {}", solve1(&data));
+    println!("Part 1: {}", solve1(&data, 2000000));
     println!("Part 2: {}", solve2(&data));
 }
 
 
-type Data = [((usize, usize), (isize, isize))];
+type Data = [((isize, isize), (isize, isize))];
 
 
-fn distance(a: (usize, usize), b: (isize, isize)) -> usize {
-    (a.0 as isize).abs_diff(b.0) + (a.1 as isize).abs_diff(b.1)
+fn distance(a: (isize, isize), b: (isize, isize)) -> usize {
+    a.0.abs_diff(b.0) + a.1.abs_diff(b.1)
 }
 
-fn find_ranges(data: &Data) -> HashMap<(usize, usize), usize> {
+fn find_ranges(data: &Data) -> HashMap<(isize, isize), usize> {
     data.iter()
         .map(|&(sensor, beacon)|
             (sensor, distance(sensor, beacon))
@@ -29,49 +28,67 @@ fn find_ranges(data: &Data) -> HashMap<(usize, usize), usize> {
 }
 
 
-fn find_bounds(data: &Data) -> (usize, usize) {
+fn find_bounds(data: &Data) -> (isize, isize) {
     data.iter()
         .fold((0, 0), |acc, &(sensor, beacon)| {
             (
-                acc.0.max(sensor.0.max(beacon.0.max(0) as usize)),
-                acc.1.max(sensor.0.max(beacon.1.max(0) as usize)),
+                acc.0.max(sensor.0.max(beacon.0)),
+                acc.1.max(sensor.0.max(beacon.1)),
             )
         })
 }
 
-fn solve1(data: &Data) -> usize {
+fn solve1(data: &Data, row: isize) -> usize {
     let ranges = find_ranges(data);
-    let (rows, cols) = find_bounds(data);
+    let (_, cols) = find_bounds(data);
     let max_range = *ranges.values().max().unwrap();
-    1
+    let buffer =  (2 * max_range + 1) as isize;
+    let occupied = data.iter()
+        .fold(HashSet::new(), |mut acc, (a, b)| {
+            acc.insert(a);
+            acc.insert(b);
+            acc
+        });
+
+    let mut count = 0;
+    for col in (0 - buffer)..(cols + buffer) {
+        let index = (row, col);
+        if occupied.contains(&index) {
+            continue;
+        }
+
+        let in_range = ranges.iter()
+            .any(|(&sensor, &max_dist)|
+                sensor != index && distance(sensor, index) <= max_dist
+            );
+        if in_range { count += 1; }
+    }
+    count
 }
 
-fn solve2(data: &Data) -> i32 {
+fn solve2(_data: &Data) -> i32 {
     2
 }
 
 
-fn parse_data<T: AsRef<str>>(data: &[T]) -> Vec<((usize, usize), (isize, isize))> {
+fn extract_coord(iter: &mut CaptureMatches) -> (isize, isize) {
+    iter.next()
+        .map(|c| {
+            let mut cap = c.iter();
+            let x = cap.nth(1).unwrap().unwrap().as_str().parse::<isize>().unwrap();
+            let y = cap.next().unwrap().unwrap().as_str().parse::<isize>().unwrap();
+            (y, x)
+        })
+        .unwrap()
+}
+
+fn parse_data<T: AsRef<str>>(data: &[T]) -> Vec<((isize, isize), (isize, isize))> {
     let re = Regex::new(r#"x=(-?\d+), y=(-?\d+)"#).unwrap();
     data.iter()
         .map(|line| {
             let mut iter = re.captures_iter(line.as_ref());
-            let sensor = iter.next()
-                .map(|c| {
-                    let mut cap = c.iter();
-                    let x = cap.nth(1).unwrap().unwrap().as_str().parse::<usize>().unwrap();
-                    let y = cap.next().unwrap().unwrap().as_str().parse::<usize>().unwrap();
-                    (y, x)
-                })
-                .unwrap();
-            let beacon = iter.next()
-                .map(|c| {
-                    let mut cap = c.iter();
-                    let x = cap.nth(1).unwrap().unwrap().as_str().parse::<isize>().unwrap();
-                    let y = cap.next().unwrap().unwrap().as_str().parse::<isize>().unwrap();
-                    (y, x)
-                })
-                .unwrap();
+            let sensor = extract_coord(&mut iter);
+            let beacon = extract_coord(&mut iter);
             (sensor, beacon)
         })
         .collect()
@@ -101,12 +118,12 @@ mod tests {
 
     #[test]
     fn part1() {
-        assert_eq!(26, solve1(&parse_data(DATA)));
+        assert_eq!(26, solve1(&parse_data(DATA), 10));
     }
 
     #[test]
     fn part2() {
         let data = parse_data(DATA);
-        assert_eq!(2, solve2(&data));
+        assert_eq!(56000011, solve2(&data));
     }
 }

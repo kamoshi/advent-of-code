@@ -1,7 +1,6 @@
 #![allow(dead_code)]
 use std::fmt;
 use std::ops::{Index, IndexMut};
-use std::ptr::write;
 use std::slice::{ChunksExact, Iter};
 
 
@@ -195,7 +194,7 @@ impl<'a, T> TranslatedViewMut<'a, T> {
 
     pub fn slice_row(&self, row: isize) -> &[T] {
         let row = row - self.tl_row;
-        self.slice_row(row)
+        self.matrix.slice_row(row as usize)
     }
 
     pub fn get_tl(&self) -> (isize, isize) {
