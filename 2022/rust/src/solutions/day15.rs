@@ -50,7 +50,7 @@ fn ranges_for_row(ranges: &HashMap<(isize, isize), usize>, row: isize) -> impl I
 }
 
 fn merge_ranges(mut ranges: Vec<Range>) -> Vec<Range> {
-    ranges.sort_by(|r1, r2| r1.start().cmp(&r2.start()));
+    ranges.sort_unstable_by(|r1, r2| r1.start().cmp(&r2.start()));
     let mut ranges = ranges.into_iter();
     ranges.next()
         .map(|first| ranges
