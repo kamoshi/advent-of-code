@@ -9,7 +9,7 @@ pub fn run() -> () {
 
     println!("Day 15");
     println!("Part 1: {}", solve1::<2000000>(&data));
-    println!("Part 2: {}", solve2(&data));
+    println!("Part 2: {}", solve2::<4000000>(&data));
 }
 
 
@@ -41,16 +41,6 @@ fn range_for_row((r, c): (isize, isize), range: usize, row: isize) -> Option<Ran
     }
 }
 
-fn find_col_bounds(data: &Data) -> (isize, isize) {
-    data.iter()
-        .fold((0, 0), |acc, &(sensor, beacon)| {
-            (
-                acc.0.min(sensor.1.min(beacon.1)),
-                acc.1.max(sensor.1.max(beacon.1)),
-            )
-        })
-}
-
 fn merge_ranges(ranges: &Vec<Range>) -> Vec<Range> {
     let mut ranges = ranges.clone();
     ranges.sort_by(|r1, r2| r1.start().cmp(&r2.start()));
@@ -58,7 +48,7 @@ fn merge_ranges(ranges: &Vec<Range>) -> Vec<Range> {
     ranges.next()
         .map(|first| ranges
             .fold(vec![first], |mut acc, next| {
-                match next.start() <= acc.last().unwrap().end() {
+                match next.start() - 1 <= *acc.last().unwrap().end() {
                     true => {
                         let prev = acc.pop().unwrap();
                         let merged_l = *next.start().min(prev.start());
@@ -72,17 +62,17 @@ fn merge_ranges(ranges: &Vec<Range>) -> Vec<Range> {
         .unwrap()
 }
 
-fn solve1<const row: isize>(data: &Data) -> usize {
+fn solve1<const ROW: isize>(data: &Data) -> usize {
     let ranges = find_ranges(data);
     let occupied = data.iter()
         .fold(HashSet::new(), |mut acc, (a, b)| {
-            if a.0 == row { acc.insert(a); }
-            if b.0 == row { acc.insert(b); }
+            if a.0 == ROW { acc.insert(a); }
+            if b.0 == ROW { acc.insert(b); }
             acc
         });
 
     let ranges = ranges.iter()
-        .filter_map(|(&point, &range)| range_for_row(point, range, row))
+        .filter_map(|(&point, &range)| range_for_row(point, range, ROW))
         .collect::<Vec<_>>();
 
     let sum = merge_ranges(&ranges)
@@ -93,8 +83,31 @@ fn solve1<const row: isize>(data: &Data) -> usize {
     sum - occupied.len()
 }
 
-fn solve2(_data: &Data) -> i32 {
-    2
+fn solve2<const SPACE: isize>(data: &Data) -> isize {
+    let ranges = find_ranges(data);
+    let accepted_cols = 0..=SPACE;
+
+    (0..SPACE).into_iter()
+        .flat_map(|cur_row| {
+            let ranges = ranges.iter()
+                .filter_map(|(&point, &range)| range_for_row(point, range, cur_row))
+                .collect::<Vec<_>>();
+            let mut ranges = merge_ranges(&ranges).into_iter();
+            let spots = ranges.next()
+                .map(|first| ranges
+                    .fold((vec![], first), |(mut acc, prev), next| {
+                        match prev.end() + 2 == *next.start() && accepted_cols.contains(&(prev.end() + 1)) {
+                            true => {
+                                acc.push(prev.end() + 1);
+                                (acc, next)
+                            }
+                            false => (acc, next)
+                        }
+                    }))
+                .unwrap().0;
+            spots.first().map(|&col| col * 4000000 + cur_row)
+        })
+        .next().unwrap()
 }
 
 
@@ -150,7 +163,6 @@ mod tests {
 
     #[test]
     fn part2() {
-        let data = parse_data(DATA);
-        assert_eq!(56000011, solve2(&data));
+        assert_eq!(56000011, solve2::<20>(&parse_data(DATA)));
     }
 }
