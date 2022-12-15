@@ -1,4 +1,5 @@
 use std::collections::{HashMap, HashSet};
+use std::ops::RangeInclusive;
 use regex::{CaptureMatches, Regex};
 use crate::utils;
 
@@ -7,12 +8,13 @@ pub fn run() -> () {
     let data = parse_data(&utils::read_lines(utils::Source::Day(15)));
 
     println!("Day 15");
-    println!("Part 1: {}", solve1(&data, 2000000));
+    println!("Part 1: {}", solve1::<2000000>(&data));
     println!("Part 2: {}", solve2(&data));
 }
 
 
 type Data = [((isize, isize), (isize, isize))];
+type Range = RangeInclusive<isize>;
 
 
 fn distance(a: (isize, isize), b: (isize, isize)) -> usize {
@@ -27,43 +29,68 @@ fn find_ranges(data: &Data) -> HashMap<(isize, isize), usize> {
         .collect()
 }
 
+fn range_for_row((r, c): (isize, isize), range: usize, row: isize) -> Option<Range> {
+    let delta_row = r.abs_diff(row);
+    match delta_row <= range {
+        true => {
+            let length = (range - range.min(delta_row)) as isize;
+            let (left, right) = (c - length, c + length);
+            Some(left..=right)
+        }
+        false => None
+    }
+}
 
-fn find_bounds(data: &Data) -> (isize, isize) {
+fn find_col_bounds(data: &Data) -> (isize, isize) {
     data.iter()
         .fold((0, 0), |acc, &(sensor, beacon)| {
             (
-                acc.0.max(sensor.0.max(beacon.0)),
-                acc.1.max(sensor.0.max(beacon.1)),
+                acc.0.min(sensor.1.min(beacon.1)),
+                acc.1.max(sensor.1.max(beacon.1)),
             )
         })
 }
 
-fn solve1(data: &Data, row: isize) -> usize {
+fn merge_ranges(ranges: &Vec<Range>) -> Vec<Range> {
+    let mut ranges = ranges.clone();
+    ranges.sort_by(|r1, r2| r1.start().cmp(&r2.start()));
+    let mut ranges = ranges.into_iter();
+    ranges.next()
+        .map(|first| ranges
+            .fold(vec![first], |mut acc, next| {
+                match next.start() <= acc.last().unwrap().end() {
+                    true => {
+                        let prev = acc.pop().unwrap();
+                        let merged_l = *next.start().min(prev.start());
+                        let merged_r = *next.end().max(prev.end());
+                        acc.push(merged_l..=merged_r);
+                    },
+                    false => acc.push(next),
+                };
+                acc
+            }))
+        .unwrap()
+}
+
+fn solve1<const row: isize>(data: &Data) -> usize {
     let ranges = find_ranges(data);
-    let (_, cols) = find_bounds(data);
-    let max_range = *ranges.values().max().unwrap();
-    let buffer =  (2 * max_range + 1) as isize;
     let occupied = data.iter()
         .fold(HashSet::new(), |mut acc, (a, b)| {
-            acc.insert(a);
-            acc.insert(b);
+            if a.0 == row { acc.insert(a); }
+            if b.0 == row { acc.insert(b); }
             acc
         });
 
-    let mut count = 0;
-    for col in (0 - buffer)..(cols + buffer) {
-        let index = (row, col);
-        if occupied.contains(&index) {
-            continue;
-        }
+    let ranges = ranges.iter()
+        .filter_map(|(&point, &range)| range_for_row(point, range, row))
+        .collect::<Vec<_>>();
 
-        let in_range = ranges.iter()
-            .any(|(&sensor, &max_dist)|
-                sensor != index && distance(sensor, index) <= max_dist
-            );
-        if in_range { count += 1; }
-    }
-    count
+    let sum = merge_ranges(&ranges)
+        .iter()
+        .map(|range| (*range.end() - *range.start() + 1) as usize)
+        .sum::<usize>();
+
+    sum - occupied.len()
 }
 
 fn solve2(_data: &Data) -> i32 {
@@ -118,7 +145,7 @@ mod tests {
 
     #[test]
     fn part1() {
-        assert_eq!(26, solve1(&parse_data(DATA), 10));
+        assert_eq!(26, solve1::<10>(&parse_data(DATA)));
     }
 
     #[test]
