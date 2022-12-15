@@ -92,7 +92,9 @@ fn solve2<const SEARCH_SPACE: isize>(data: &Data) -> isize {
     (0..SEARCH_SPACE).into_iter()
         .flat_map(|cur_row| {
             let ranges = ranges_for_row(&ranges, cur_row)
-                .filter(|range| 0 <= *range.end() || *range.end() <= SEARCH_SPACE)
+                .filter(|range|
+                    -1 <= *range.end() && *range.end() < SEARCH_SPACE || 0 < *range.start() && *range.start() <= SEARCH_SPACE + 1
+                )
                 .collect();
 
             let mut ranges = merge_ranges(ranges).into_iter();
