@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 use std::fmt;
 use std::ops::{Index, IndexMut};
+use std::ptr::write;
 use std::slice::{ChunksExact, Iter};
 
 
@@ -151,9 +152,10 @@ impl<T> FromIterator<T> for Matrix<T> {
 
 impl<T> fmt::Display for Matrix<T> where T: fmt::Display {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        for row in self.iter_rows() {
+        for (index, row) in self.iter_rows().enumerate() {
+            write!(f, "{index:<3}")?;
             for item in row {
-                write!(f, "{}", item)?
+                write!(f, "{item}")?
             };
             write!(f, "\n")?;
         };
@@ -194,6 +196,10 @@ impl<'a, T> TranslatedViewMut<'a, T> {
     pub fn slice_row(&self, row: isize) -> &[T] {
         let row = row - self.tl_row;
         self.slice_row(row)
+    }
+
+    pub fn get_tl(&self) -> (isize, isize) {
+        (self.tl_row, self.tl_col)
     }
 }
 
