@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use std::collections::{HashMap, HashSet};
 use std::ops::RangeInclusive;
 use regex::{CaptureMatches, Regex};
@@ -41,8 +42,14 @@ fn range_for_row((r, c): (isize, isize), range: usize, row: isize) -> Option<Ran
     }
 }
 
-fn merge_ranges(ranges: &Vec<Range>) -> Vec<Range> {
-    let mut ranges = ranges.clone();
+fn ranges_for_row(ranges: &HashMap<(isize, isize), usize>, row: isize) -> impl Iterator<Item = Range> + '_ {
+    ranges.iter()
+        .filter_map(move |(&point, &range)|
+            range_for_row(point, range, row)
+        )
+}
+
+fn merge_ranges(mut ranges: Vec<Range>) -> Vec<Range> {
     ranges.sort_by(|r1, r2| r1.start().cmp(&r2.start()));
     let mut ranges = ranges.into_iter();
     ranges.next()
@@ -71,11 +78,7 @@ fn solve1<const ROW: isize>(data: &Data) -> usize {
             acc
         });
 
-    let ranges = ranges.iter()
-        .filter_map(|(&point, &range)| range_for_row(point, range, ROW))
-        .collect::<Vec<_>>();
-
-    let sum = merge_ranges(&ranges)
+    let sum = merge_ranges(ranges_for_row(&ranges, ROW).collect())
         .iter()
         .map(|range| (*range.end() - *range.start() + 1) as usize)
         .sum::<usize>();
@@ -83,16 +86,17 @@ fn solve1<const ROW: isize>(data: &Data) -> usize {
     sum - occupied.len()
 }
 
-fn solve2<const SPACE: isize>(data: &Data) -> isize {
+fn solve2<const SEARCH_SPACE: isize>(data: &Data) -> isize {
     let ranges = find_ranges(data);
-    let accepted_cols = 0..=SPACE;
+    let accepted_cols = 0..=SEARCH_SPACE;
 
-    (0..SPACE).into_iter()
+    (0..SEARCH_SPACE).into_iter()
         .flat_map(|cur_row| {
-            let ranges = ranges.iter()
-                .filter_map(|(&point, &range)| range_for_row(point, range, cur_row))
-                .collect::<Vec<_>>();
-            let mut ranges = merge_ranges(&ranges).into_iter();
+            let ranges = ranges_for_row(&ranges, cur_row)
+                .filter(|range| 0 <= *range.end() || *range.end() <= SEARCH_SPACE)
+                .collect();
+
+            let mut ranges = merge_ranges(ranges).into_iter();
             let spots = ranges.next()
                 .map(|first| ranges
                     .fold((vec![], first), |(mut acc, prev), next| {
