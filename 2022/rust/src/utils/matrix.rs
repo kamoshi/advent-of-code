@@ -85,6 +85,12 @@ impl<T> Matrix<T> {
             .flat_map(move |row| col_range.clone().into_iter().map(move |col| (row, col)))
     }
 
+    pub fn slice_row(&self, row: usize) -> &[T] {
+        let start = row * self.cols;
+        let end = start + self.cols;
+        &self.array[start..end]
+    }
+
     #[inline(always)]
     fn get_offset(&self, row: usize, col: usize) -> usize {
         (row - self.offset_r) * self.cols + (col - self.offset_c)
@@ -155,3 +161,54 @@ impl<T> fmt::Display for Matrix<T> where T: fmt::Display {
     }
 }
 
+
+pub struct TranslatedViewMut<'a, T> {
+    matrix: &'a mut Matrix<T>,
+    tl_row: isize,
+    tl_col: isize,
+}
+
+impl<T> Matrix<T> {
+    pub fn view_translated(&mut self, (rows, cols): (isize, isize)) -> TranslatedViewMut<'_, T> {
+        TranslatedViewMut { matrix: self, tl_row: rows, tl_col: cols }
+    }
+}
+
+impl<'a, T> TranslatedViewMut<'a, T> {
+    fn tl(&self, (row, col): (usize, usize)) -> (isize, isize) {
+        let row = row as isize + self.tl_row;
+        let col = col as isize + self.tl_col;
+        (row, col)
+    }
+
+    fn undo_tl(&self, (row, col): (isize, isize)) -> (usize, usize) {
+        let row = (row - self.tl_row) as usize;
+        let col = (col - self.tl_col) as usize;
+        (row, col)
+    }
+
+    pub fn cell_indices(&self) -> impl Iterator<Item = (isize, isize)> + '_ {
+        self.matrix.cell_indices().map(|index| self.tl(index))
+    }
+
+    pub fn slice_row(&self, row: isize) -> &[T] {
+        let row = row - self.tl_row;
+        self.slice_row(row)
+    }
+}
+
+impl<'a, T> Index<(isize, isize)> for TranslatedViewMut<'a, T> {
+    type Output = T;
+
+    fn index(&self, index: (isize, isize)) -> &Self::Output {
+        let index = self.undo_tl(index);
+        &self.matrix[index]
+    }
+}
+
+impl<'a, T> IndexMut<(isize, isize)> for TranslatedViewMut<'a, T> {
+    fn index_mut(&mut self, index: (isize, isize)) -> &mut Self::Output {
+        let index = self.undo_tl(index);
+        &mut self.matrix[index]
+    }
+}
