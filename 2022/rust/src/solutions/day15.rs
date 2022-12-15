@@ -88,7 +88,6 @@ fn solve1<const ROW: isize>(data: &Data) -> usize {
 
 fn solve2<const SEARCH_SPACE: isize>(data: &Data) -> isize {
     let ranges = find_ranges(data);
-    let accepted_cols = 0..=SEARCH_SPACE;
 
     (0..SEARCH_SPACE).into_iter()
         .flat_map(|cur_row| {
@@ -100,7 +99,7 @@ fn solve2<const SEARCH_SPACE: isize>(data: &Data) -> isize {
             let spots = ranges.next()
                 .map(|first| ranges
                     .fold((vec![], first), |(mut acc, prev), next| {
-                        match prev.end() + 2 == *next.start() && accepted_cols.contains(&(prev.end() + 1)) {
+                        match prev.end() + 2 == *next.start() {
                             true => {
                                 acc.push(prev.end() + 1);
                                 (acc, next)
