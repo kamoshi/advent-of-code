@@ -1,4 +1,5 @@
-use std::collections::{HashMap, HashSet};
+use std::cmp::Ordering;
+use std::collections::{BinaryHeap, HashMap, HashSet};
 use crate::utils;
 
 
@@ -18,43 +19,106 @@ struct Valve<'data> {
     next: Vec<&'data str>
 }
 
+#[derive(Eq, PartialEq)]
+struct State<'data> {
+    name: &'data str,
+    cost: u32,
+}
+
+impl Ord for State<'_> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        other.cost.cmp(&self.cost)
+    }
+}
+
+impl PartialOrd<Self> for State<'_> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+
+fn closed_valves<'data>(data: &'data [Valve<'data>]) -> HashSet<&'data str> {
+    data.iter()
+        .filter(|valve| valve.rate != 0)
+        .map(|valve| valve.name)
+        .collect()
+}
 
 fn build_map<'data, 'a>(valves: &'a [Valve<'data>]) -> HashMap<&'data str, &'a Valve<'data>> {
     valves.iter().map(|valve| (valve.name, valve)).collect()
 }
 
-fn released_pressure<'data, 'a>(map: &'a HashMap<&'data str, Valve>, keys: &'a [&'data str]) -> u32 {
+fn release_pressure<'data, 'a>(map: &'a HashMap<&'data str, &'a Valve<'data>>, keys: &'a HashSet<&'data str>) -> u32 {
     keys.iter()
         .map(|&key| map.get(key).unwrap().rate)
         .sum()
 }
 
-fn valve_move<'data, 'a>(
-    map: &'a HashMap<&'data str, &'a Valve<'data>>,
-    open: HashSet<&'data str>,
-    next: &'data str,
-    time_left: u8,
-    released: u32,
-) -> i32 {
-    todo!()
+fn find_distance<'data, 'a>(map: &'a HashMap<&'data str, &'a Valve<'data>>, start: &'data str, goal: &'data str, ) -> u32 {
+    let mut frontier: BinaryHeap<State> = BinaryHeap::new();
+    let mut costs: HashMap<&'data str, u32> = HashMap::from([(start, 0)]);
+
+    frontier.push(State { name: start, cost: 0 });
+    while let Some(State { name: current, .. }) = frontier.pop() {
+        if current == goal { break };
+
+        for &neighbour in map.get(current).unwrap().next.iter() {
+            let cost = costs.get(&current).unwrap() + 1;
+
+            if !costs.contains_key(&neighbour) || cost < *costs.get(&neighbour).unwrap() {
+                costs.insert(neighbour, cost);
+                frontier.push(State { cost, name: neighbour });
+            }
+        }
+    }
+    *costs.get(goal).unwrap()
 }
 
-fn valve_open<'data, 'a>(
-    valves: HashMap<&'data str, &'a Valve<'data>>,
-    open: HashSet<&'data str>,
+fn find_distances<'data, 'a>(map: &'a HashMap<&'data str, &'a Valve<'data>>, data: &'data [Valve]) -> HashMap<(&'data str, &'data str), u32> {
+    data.iter()
+        .flat_map(|start|
+            data.iter()
+                .map(|goal| ((start.name, goal.name), find_distance(&map, start.name, goal.name)))
+        )
+        .collect::<HashMap<_, _>>()
+}
+
+fn move_to_open<'data, 'a>(
+    map: &'a HashMap<&'data str, &'a Valve<'data>>,
+    distances: &'a HashMap<(&'data str, &'data str), u32>,
+    closed: &'a HashSet<&'data str>,
+    opened: &'a HashSet<&'data str>,
+    curr: &'data str,
     next: &'data str,
-    time_left: u8,
+    time_left: u32,
     released: u32,
-) -> i32 {
-    todo!()
+) -> u32 {
+    let distance = *distances.get(&(curr, next)).unwrap().min(&time_left);
+    let released = released + release_pressure(map, opened) * distance;
+    if distance == time_left { return released };
+    let curr = next;
+
+    let released = released + release_pressure(map, opened);
+    let closed = { let mut closed = closed.clone(); closed.remove(curr); closed };
+    let opened = { let mut opened = opened.clone(); opened.insert(curr); opened };
+    let time_left = time_left - distance - 1;
+
+    closed.iter()
+        .map(|&next| move_to_open(map, distances, &closed, &opened, curr, next, time_left, released))
+        .max()
+        .unwrap_or_else(|| released + release_pressure(map, &opened) * time_left)
+}
+
+fn find_max_for_start(data: &[Valve], start: &str, limit: u32) -> u32 {
+    let map = build_map(data);
+    let distances = find_distances(&map, data);
+    let closed = closed_valves(data);
+    move_to_open(&map, &distances, &closed, &HashSet::new(), start, start, limit + 1, 0)
 }
 
 fn solve1(data: &[Valve]) -> u32 {
-    let map = build_map(data);
-
-    valve_move(&map, HashSet::new(), "AA", 30, 0);
-    println!("hi");
-    1
+    find_max_for_start(data, "AA", 30)
 }
 
 fn solve2(data: &[Valve]) -> i32 {
@@ -65,7 +129,7 @@ fn solve2(data: &[Valve]) -> i32 {
 fn parse_data<T: AsRef<str>>(data: &[T]) -> Vec<Valve> {
     data.iter()
         .map(|line| {
-            let mut line = line.as_ref().split(" ");;
+            let mut line = line.as_ref().split(" ");
             let name = line.nth(1).unwrap();
             let rate = line.nth(2).unwrap()
                 .rsplit("=")
@@ -101,8 +165,7 @@ mod tests {
 
     #[test]
     fn part1() {
-        let data = parse_data(DATA);
-        assert_eq!(1, solve1(&data));
+        assert_eq!(1651, solve1(&parse_data(DATA)));
     }
 
     #[test]
