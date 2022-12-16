@@ -4,7 +4,7 @@ use crate::utils;
 
 
 pub fn run() -> () {
-    let lines = utils::read_lines(utils::Source::Day(-1));
+    let lines = utils::read_lines(utils::Source::Day(16));
     let data = parse_data(&lines);
 
     println!("Day 16");
