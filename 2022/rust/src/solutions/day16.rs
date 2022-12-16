@@ -2,6 +2,8 @@ use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashMap, HashSet};
 use crate::utils;
 
+use rayon::prelude::*;
+
 
 pub fn run() -> () {
     let lines = utils::read_lines(utils::Source::Day(16));
@@ -107,7 +109,7 @@ fn move_to_open<'data, 'a>(
     let opened = { let mut opened = opened.clone(); opened.insert(curr); opened };
     let time_left = state.time_left - distance - 1;
 
-    closed.iter()
+    closed.par_iter()
         .map(|&next| move_to_open(map, distances, &closed, &opened, MoveState { curr, next, time_left, released }))
         .max()
         .unwrap_or_else(|| released + release_pressure(map, &opened) * time_left)
@@ -142,56 +144,49 @@ fn parallel_to_open<'data, 'a>(
     opened: &'a HashSet<&'data str>,
     state: ParallelMoveState,
 ) -> u32 {
-    let p_distance = *distances.get(&(state.p_curr, state.p_next)).unwrap() - state.p_progress;
-    let e_distance = *distances.get(&(state.e_curr, state.e_next)).unwrap() - state.e_progress;
-    let distance = state.time_left.min(p_distance).min(e_distance);
+    let p_distance_left = *distances.get(&(state.p_curr, state.p_next)).unwrap() - state.p_progress;
+    let e_distance_left = *distances.get(&(state.e_curr, state.e_next)).unwrap() - state.e_progress;
+    let distance = state.time_left.min(p_distance_left).min(e_distance_left);
     let released = state.released + distance * release_pressure(map, opened);
     if distance == state.time_left { return released };
 
+    // opening
     let released = released + release_pressure(map, opened);
-    let (closed, opened) = match (distance == p_distance, distance == e_distance) {
-        (true, true) => (
-            { let mut closed = closed.clone(); closed.remove(state.p_next); closed.remove(state.e_next); closed },
-            { let mut opened = opened.clone(); opened.insert(state.p_next); opened.insert(state.e_next); opened },
-        ),
-        (true, false) => (
-            { let mut closed = closed.clone(); closed.remove(state.p_next); closed },
-            { let mut opened = opened.clone(); opened.insert(state.p_next); opened },
-        ),
-        (false, true) => (
-            { let mut closed = closed.clone(); closed.remove(state.e_next); closed },
-            { let mut opened = opened.clone(); opened.insert(state.e_next); opened },
-        ),
-        _ => unreachable!(),
+    let (closed, opened) = {
+        let mut closed = closed.clone();
+        let mut opened = opened.clone();
+        if distance == p_distance_left { closed.remove(state.p_next); opened.insert(state.p_next); };
+        if distance == e_distance_left { closed.remove(state.e_next); opened.insert(state.e_next); };
+        (closed, opened)
     };
     let time_left = state.time_left - distance - 1;
 
-    match (distance == p_distance, distance == e_distance) {
-        (true, true) => closed.iter()
-            .flat_map(|&p_next| closed.iter()
+    match (distance == p_distance_left, distance == e_distance_left) {
+        (true, true) => closed.par_iter()
+            .flat_map(|&p_next| closed.par_iter()
                 .filter(move |&&e_next| e_next != p_next)
-                .map(|&e_next| { parallel_to_open(map, distances, &closed, &opened, ParallelMoveState {
+                .map(|&e_next| parallel_to_open(map, distances, &closed, &opened, ParallelMoveState {
                     p_curr: state.p_next, p_next, p_progress: 0,
                     e_curr: state.e_next, e_next, e_progress: 0,
                     time_left, released,
-                })})
+                }))
             )
             .max()
             .unwrap_or_else(|| released + release_pressure(map, &opened) * time_left),
-        (true, false) => closed.iter()
-            .map(|&next| { parallel_to_open(map, distances, &closed, &opened, ParallelMoveState {
+        (true, false) => closed.par_iter()
+            .map(|&next| parallel_to_open(map, distances, &closed, &opened, ParallelMoveState {
                 p_curr: state.p_next, p_next: next, p_progress: 0,
-                e_curr: state.e_curr, e_next: state.e_next, e_progress: state.e_progress + 1,
+                e_curr: state.e_curr, e_next: state.e_next, e_progress: state.e_progress + distance + 1,
                 time_left, released,
-            })})
+            }))
             .max()
             .unwrap_or_else(|| released + release_pressure(map, &opened) * time_left),
-        (false, true) => closed.iter()
-            .map(|&next| { parallel_to_open(map, distances, &closed, &opened, ParallelMoveState {
-                p_curr: state.p_curr, p_next: state.p_next, p_progress: state.p_progress + 1,
+        (false, true) => closed.par_iter()
+            .map(|&next| parallel_to_open(map, distances, &closed, &opened, ParallelMoveState {
+                p_curr: state.p_curr, p_next: state.p_next, p_progress: state.p_progress + distance + 1,
                 e_curr: state.e_next, e_next: next, e_progress: 0,
                 time_left, released,
-            })})
+            }))
             .max()
             .unwrap_or_else(|| released + release_pressure(map, &opened) * time_left),
         _ => unreachable!()
