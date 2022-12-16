@@ -84,41 +84,55 @@ fn find_distances<'data, 'a>(map: &'a HashMap<&'data str, &'a Valve<'data>>, dat
         .collect::<HashMap<_, _>>()
 }
 
+struct MoveState<'data> {
+    curr: &'data str,
+    next: &'data str,
+    time_left: u32,
+    released: u32,
+}
+
 fn move_to_open<'data, 'a>(
     map: &'a HashMap<&'data str, &'a Valve<'data>>,
     distances: &'a HashMap<(&'data str, &'data str), u32>,
     closed: &'a HashSet<&'data str>,
     opened: &'a HashSet<&'data str>,
-    curr: &'data str,
-    next: &'data str,
-    time_left: u32,
-    released: u32,
+    state: MoveState,
 ) -> u32 {
-    let distance = *distances.get(&(curr, next)).unwrap().min(&time_left);
-    let released = released + release_pressure(map, opened) * distance;
-    if distance == time_left { return released };
-    let curr = next;
+    let distance = *distances.get(&(state.curr, state.next)).unwrap().min(&state.time_left);
+    let released = state.released + release_pressure(map, opened) * distance;
+    if distance == state.time_left { return released };
+    let curr = state.next;
 
     let released = released + release_pressure(map, opened);
     let closed = { let mut closed = closed.clone(); closed.remove(curr); closed };
     let opened = { let mut opened = opened.clone(); opened.insert(curr); opened };
-    let time_left = time_left - distance - 1;
+    let time_left = state.time_left - distance - 1;
 
     closed.iter()
-        .map(|&next| move_to_open(map, distances, &closed, &opened, curr, next, time_left, released))
+        .map(|&next| move_to_open(map, distances, &closed, &opened, MoveState { curr, next, time_left, released }))
         .max()
         .unwrap_or_else(|| released + release_pressure(map, &opened) * time_left)
 }
 
 fn find_max_for_start(data: &[Valve], start: &str, limit: u32) -> u32 {
     let map = build_map(data);
-    let distances = find_distances(&map, data);
-    let closed = closed_valves(data);
-    move_to_open(&map, &distances, &closed, &HashSet::new(), start, start, limit + 1, 0)
+    let start_state = MoveState { curr: start, next: start, time_left: limit + 1, released: 0 };
+    move_to_open(&map, &find_distances(&map, data), &closed_valves(data), &HashSet::new(), start_state)
 }
 
 fn solve1(data: &[Valve]) -> u32 {
     find_max_for_start(data, "AA", 30)
+}
+
+struct ParallelMoveState<'data> {
+    p_curr: &'data str,
+    p_next: &'data str,
+    p_progress: u32,
+    e_curr: &'data str,
+    e_next: &'data str,
+    e_progress: u32,
+    time_left: u32,
+    released: u32,
 }
 
 fn solve2(data: &[Valve]) -> i32 {
