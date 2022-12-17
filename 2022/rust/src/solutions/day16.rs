@@ -101,7 +101,6 @@ fn release_bitmap(valves: &[Valve], bitmap: u64) -> u32 {
 struct MoveState {
     curr: usize,
     next: usize,
-    closed: u64,
     time_left: u32,
     released: u32,
 }
@@ -113,26 +112,23 @@ fn move_to_open(
     state: MoveState,
 ) -> u32 {
     let distance = state.time_left.min(*distances.get(&(state.curr, state.next)).unwrap());
-    let released = state.released + release_bitmap(valves, state.closed) * distance;
-    if distance == state.time_left { return released };
+    if distance == state.time_left { return state.released };
     let curr = state.next;
 
-    let released = released + release_bitmap(valves, state.closed);
-    let closed_bm = state.closed ^ (1 << curr);
     let closed = { let mut closed = closed.clone(); closed.remove(&curr); closed };
     let time_left = state.time_left - distance - 1;
+    let released = state.released + valves[curr].rate * time_left;
 
     closed.iter()
-        .map(|&next| move_to_open(valves, distances, &closed, MoveState { curr, next, closed: closed_bm, time_left, released }))
+        .map(|&next| move_to_open(valves, distances, &closed, MoveState { curr, next, time_left, released }))
         .max()
-        .unwrap_or_else(|| released + release_bitmap(valves, closed_bm) * time_left)
+        .unwrap_or(released)
 }
 
 fn find_max_for_start(valves: &[Valve], start: usize, limit: u32) -> u32 {
     move_to_open(&valves, &find_distances(&valves), &closed_valves(valves), MoveState {
         curr: start,
         next: start,
-        closed: closed_bitmap(valves),
         time_left: limit + 1,
         released: 0,
     })
