@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashMap, HashSet};
 use crate::utils;
@@ -76,32 +77,6 @@ fn closed_valves(valves: &[Valve]) -> HashSet<usize> {
         .collect()
 }
 
-fn closed_bitmap(valves: &[Valve]) -> u64 {
-    let mut bitmap = 0;
-    for valve in valves {
-        if valve.rate != 0 {
-            bitmap |= 1 << valve.name
-        }
-    }
-    bitmap
-}
-
-fn release_pressure(valves: &[Valve], keys: &HashSet<usize>) -> u32 {
-    keys.iter()
-        .map(|&key| valves[key].rate)
-        .sum()
-}
-
-fn release_bitmap(valves: &[Valve], bitmap: u64) -> u32 {
-    let mut sum = 0;
-    for valve in valves {
-        if valve.rate != 0 && bitmap & (1 << valve.name) == 0 {
-            sum += valve.rate
-        }
-    }
-    sum
-}
-
 fn set_to_bitmap(set: &HashSet<usize>) -> u64 {
     let mut map = 0;
     for &index in set {
@@ -166,39 +141,32 @@ fn solve1((start, valves, distances): &Data) -> u32 {
 fn bitmap_to_set(valves: &[Valve], bitmap: u16) -> HashSet<usize> {
     let mut set = HashSet::new();
     for valve in valves {
-        if bitmap & (1 << valve.name) != 0 {
-            set.insert(valve.name);
-        }
+        if bitmap & (1 << valve.name) != 0 { set.insert(valve.name); }
     }
     set
 }
 
 fn solve2((start, valves, distances): &Data) -> u32 {
-    let mut results: HashMap<u16, u32> = HashMap::new();
+    let mask = valves.iter().fold(0_u16, |acc, v| acc | 1 << v.name);
+
+    let mut top_score: u32 = 0;
     let mut cache = HashMap::new();
-    let all_set = 0b01111111_11111111_u16;
-
     for bitmap in 1..u16::MAX {
-        if bitmap.count_ones() < 4 { continue }
-        let closed = bitmap_to_set(valves, bitmap);
-
-        let result = move_to_open(&valves, &distances, MoveState {
+        let res_1 = move_to_open(&valves, &distances, MoveState {
             current: *start,
             time_left: 27,
-            closed: &closed,
+            closed: &bitmap_to_set(valves, bitmap),
+        }, &mut cache);
+        let res_2 = move_to_open(&valves, &distances, MoveState {
+            current: *start,
+            time_left: 27,
+            closed: &bitmap_to_set(valves, bitmap ^ mask),
         }, &mut cache);
 
-        results.insert(bitmap, result);
+        top_score = top_score.max(res_1 + res_2)
     }
 
-    results.keys()
-        .flat_map(|&key_p| results.keys()
-            .filter(move |&key_e| key_p ^ key_e == all_set)
-            .map(move |&key_e| (key_p, key_e))
-        )
-        .map(|(key_p, key_e)| results[&key_p] + results[&key_e])
-        .max()
-        .unwrap()
+    top_score
 }
 
 
