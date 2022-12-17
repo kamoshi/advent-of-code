@@ -2,6 +2,7 @@ use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashMap, HashSet};
 use crate::utils;
 
+use rayon::prelude::*;
 
 pub fn run() -> () {
     let lines = utils::read_lines(utils::Source::Day(16));
@@ -98,39 +99,48 @@ fn release_bitmap(valves: &[Valve], bitmap: u64) -> u32 {
     sum
 }
 
-struct MoveState {
+// fn set_to_bitmap(set: &HashSet<usize>) -> u64 {
+//     let mut map = 0;
+//     for &index in set {
+//         map |= 1 << index
+//     }
+//     map
+// }
+
+struct MoveState<'a> {
     curr: usize,
     next: usize,
     time_left: u32,
-    released: u32,
+    closed: &'a HashSet<usize>,
 }
 
 fn move_to_open(
     valves: &[Valve],
     distances: &HashMap<(usize, usize), u32>,
-    closed: &HashSet<usize>,
     state: MoveState,
 ) -> u32 {
     let distance = state.time_left.min(*distances.get(&(state.curr, state.next)).unwrap());
-    if distance == state.time_left { return state.released };
+    if distance == state.time_left { return 0 };
     let curr = state.next;
 
-    let closed = { let mut closed = closed.clone(); closed.remove(&curr); closed };
+    let closed = { let mut closed = state.closed.clone(); closed.remove(&curr); closed };
     let time_left = state.time_left - distance - 1;
-    let released = state.released + valves[curr].rate * time_left;
+    let released = valves[curr].rate * time_left;
 
-    closed.iter()
-        .map(|&next| move_to_open(valves, distances, &closed, MoveState { curr, next, time_left, released }))
+    let max_next = closed.iter()
+        .map(|&next| move_to_open(valves, distances, MoveState { curr, next, time_left, closed: &closed }))
         .max()
-        .unwrap_or(released)
+        .unwrap_or_default();
+
+    released + max_next
 }
 
 fn find_max_for_start(valves: &[Valve], start: usize, limit: u32) -> u32 {
-    move_to_open(&valves, &find_distances(&valves), &closed_valves(valves), MoveState {
+    move_to_open(&valves, &find_distances(&valves), MoveState {
         curr: start,
         next: start,
         time_left: limit + 1,
-        released: 0,
+        closed: &closed_valves(valves)
     })
 }
 
