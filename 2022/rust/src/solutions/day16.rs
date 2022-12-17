@@ -99,49 +99,65 @@ fn release_bitmap(valves: &[Valve], bitmap: u64) -> u32 {
     sum
 }
 
-// fn set_to_bitmap(set: &HashSet<usize>) -> u64 {
-//     let mut map = 0;
-//     for &index in set {
-//         map |= 1 << index
-//     }
-//     map
-// }
+fn set_to_bitmap(set: &HashSet<usize>) -> u64 {
+    let mut map = 0;
+    for &index in set {
+        map |= 1 << index
+    }
+    map
+}
 
 struct MoveState<'a> {
-    curr: usize,
-    next: usize,
+    current: usize,
     time_left: u32,
     closed: &'a HashSet<usize>,
+}
+
+impl<'a> MoveState<'a> {
+    fn as_cache_key(&self) -> (usize, u32, u64) {
+        (self.current, self.time_left, set_to_bitmap(self.closed))
+    }
 }
 
 fn move_to_open(
     valves: &[Valve],
     distances: &HashMap<(usize, usize), u32>,
     state: MoveState,
+    cache: &mut HashMap<(usize, u32, u64), u32>
 ) -> u32 {
-    let distance = state.time_left.min(*distances.get(&(state.curr, state.next)).unwrap());
-    if distance == state.time_left { return 0 };
-    let curr = state.next;
+    if state.time_left < 1 { return 0 };
+    let cached = cache.get(&state.as_cache_key());
+    if cached.is_some() { return *cached.unwrap() }
 
-    let closed = { let mut closed = state.closed.clone(); closed.remove(&curr); closed };
-    let time_left = state.time_left - distance - 1;
-    let released = valves[curr].rate * time_left;
+    let closed = { let mut closed = state.closed.clone(); closed.remove(&state.current); closed };
+    let time_left = state.time_left - 1;
+    let released = valves[state.current].rate * time_left;
 
     let max_next = closed.iter()
-        .map(|&next| move_to_open(valves, distances, MoveState { curr, next, time_left, closed: &closed }))
+        .filter_map(|&current| {
+            let distance = distances[&(state.current, current)];
+            match time_left > distance + 1 {
+                true => Some(move_to_open(valves, distances, MoveState {
+                    current,
+                    time_left: time_left - distance,
+                    closed: &closed
+                }, cache)),
+                false => None,
+            }
+        })
         .max()
         .unwrap_or_default();
-
-    released + max_next
+    let result = released + max_next;
+    cache.insert(state.as_cache_key(), result);
+    result
 }
 
 fn find_max_for_start(valves: &[Valve], start: usize, limit: u32) -> u32 {
     move_to_open(&valves, &find_distances(&valves), MoveState {
-        curr: start,
-        next: start,
+        current: start,
         time_left: limit + 1,
         closed: &closed_valves(valves)
-    })
+    }, &mut HashMap::new())
 }
 
 fn solve1((map, data): &(HashMap<&str, usize>, Vec<Valve>)) -> u32 {
