@@ -38,24 +38,20 @@ impl PartialOrd<Self> for State {
 }
 
 
-fn closed_valves(data: &[Valve]) -> HashSet<usize> {
-    data.iter()
+fn closed_valves(valves: &[Valve]) -> HashSet<usize> {
+    valves.iter()
         .filter(|valve| valve.rate != 0)
         .map(|valve| valve.name)
         .collect()
 }
 
-fn build_map(valves: &[Valve]) -> HashMap<usize, &Valve> {
-    valves.iter().map(|valve| (valve.name, valve)).collect()
-}
-
-fn release_pressure(map: &HashMap<usize, &Valve>, keys: &HashSet<usize>) -> u32 {
+fn release_pressure(valves: &[Valve], keys: &HashSet<usize>) -> u32 {
     keys.iter()
-        .map(|&key| map.get(&key).unwrap().rate)
+        .map(|&key| valves[key].rate)
         .sum()
 }
 
-fn find_distance(map: &HashMap<usize, &Valve>, start: usize, goal: usize) -> u32 {
+fn find_distance(valves: &[Valve], start: usize, goal: usize) -> u32 {
     let mut frontier: BinaryHeap<State> = BinaryHeap::new();
     let mut costs: HashMap<usize, u32> = HashMap::from([(start, 0)]);
 
@@ -63,7 +59,7 @@ fn find_distance(map: &HashMap<usize, &Valve>, start: usize, goal: usize) -> u32
     while let Some(State { name: current, .. }) = frontier.pop() {
         if current == goal { break };
 
-        for &neighbour in map.get(&current).unwrap().next.iter() {
+        for &neighbour in valves[current].next.iter() {
             let cost = costs.get(&current).unwrap() + 1;
 
             if !costs.contains_key(&neighbour) || cost < *costs.get(&neighbour).unwrap() {
@@ -75,10 +71,10 @@ fn find_distance(map: &HashMap<usize, &Valve>, start: usize, goal: usize) -> u32
     *costs.get(&goal).unwrap()
 }
 
-fn find_distances(map: &HashMap<usize, &Valve>, data: &[Valve]) -> HashMap<(usize, usize), u32> {
-    data.iter()
+fn find_distances(valves: &[Valve]) -> HashMap<(usize, usize), u32> {
+    valves.iter()
         .flat_map(|start|
-            data.iter().map(|goal| ((start.name, goal.name), find_distance(&map, start.name, goal.name)))
+            valves.iter().map(|goal| ((start.name, goal.name), find_distance(valves, start.name, goal.name)))
         )
         .collect()
 }
@@ -91,32 +87,31 @@ struct MoveState {
 }
 
 fn move_to_open(
-    map: &HashMap<usize, &Valve>,
+    valves: &[Valve],
     distances: &HashMap<(usize, usize), u32>,
     closed: &HashSet<usize>,
     opened: &HashSet<usize>,
     state: MoveState,
 ) -> u32 {
     let distance = state.time_left.min(*distances.get(&(state.curr, state.next)).unwrap());
-    let released = state.released + release_pressure(map, opened) * distance;
+    let released = state.released + release_pressure(valves, opened) * distance;
     if distance == state.time_left { return released };
     let curr = state.next;
 
-    let released = released + release_pressure(map, opened);
+    let released = released + release_pressure(valves, opened);
     let closed = { let mut closed = closed.clone(); closed.remove(&curr); closed };
     let opened = { let mut opened = opened.clone(); opened.insert(curr); opened };
     let time_left = state.time_left - distance - 1;
 
     closed.iter()
-        .map(|&next| move_to_open(map, distances, &closed, &opened, MoveState { curr, next, time_left, released }))
+        .map(|&next| move_to_open(valves, distances, &closed, &opened, MoveState { curr, next, time_left, released }))
         .max()
-        .unwrap_or_else(|| released + release_pressure(map, &opened) * time_left)
+        .unwrap_or_else(|| released + release_pressure(valves, &opened) * time_left)
 }
 
-fn find_max_for_start(data: &[Valve], start: usize, limit: u32) -> u32 {
-    let map = build_map(data);
+fn find_max_for_start(valves: &[Valve], start: usize, limit: u32) -> u32 {
     let start_state = MoveState { curr: start, next: start, time_left: limit + 1, released: 0 };
-    move_to_open(&map, &find_distances(&map, data), &closed_valves(data), &HashSet::new(), start_state)
+    move_to_open(&valves, &find_distances(&valves), &closed_valves(valves), &HashSet::new(), start_state)
 }
 
 fn solve1((map, data): &(HashMap<&str, usize>, Vec<Valve>)) -> u32 {
@@ -137,7 +132,7 @@ struct ParallelMoveState {
 }
 
 fn parallel_to_open(
-    map: &HashMap<usize, &Valve>,
+    valves: &[Valve],
     distances: &HashMap<(usize, usize), u32>,
     closed: &HashSet<usize>,
     opened: &HashSet<usize>,
@@ -146,11 +141,11 @@ fn parallel_to_open(
     let p_distance_left = *distances.get(&(state.p_curr, state.p_next)).unwrap() - state.p_progress;
     let e_distance_left = *distances.get(&(state.e_curr, state.e_next)).unwrap() - state.e_progress;
     let distance = state.time_left.min(p_distance_left).min(e_distance_left);
-    let released = state.released + distance * release_pressure(map, opened);
+    let released = state.released + distance * release_pressure(valves, opened);
     if distance == state.time_left { return released };
 
     // opening
-    let released = released + release_pressure(map, opened);
+    let released = released + release_pressure(valves, opened);
     let (closed, opened) = {
         let mut closed = closed.clone();
         let mut opened = opened.clone();
@@ -164,42 +159,41 @@ fn parallel_to_open(
         (true, true) => closed.iter()
             .flat_map(|p_next| closed.iter()
                 .filter(move |&e_next| e_next != p_next)
-                .map(|e_next| parallel_to_open(map, distances, &closed, &opened, ParallelMoveState {
+                .map(|e_next| parallel_to_open(valves, distances, &closed, &opened, ParallelMoveState {
                     p_curr: state.p_next, p_next: *p_next, p_progress: 0,
                     e_curr: state.e_next, e_next: *e_next, e_progress: 0,
                     time_left, released,
                 }))
             )
             .max()
-            .unwrap_or_else(|| released + release_pressure(map, &opened) * time_left),
+            .unwrap_or_else(|| released + release_pressure(valves, &opened) * time_left),
         (true, false) => closed.iter()
-            .map(|&next| parallel_to_open(map, distances, &closed, &opened, ParallelMoveState {
+            .map(|&next| parallel_to_open(valves, distances, &closed, &opened, ParallelMoveState {
                 p_curr: state.p_next, p_next: next, p_progress: 0,
                 e_curr: state.e_curr, e_next: state.e_next, e_progress: state.e_progress + distance + 1,
                 time_left, released,
             }))
             .max()
-            .unwrap_or_else(|| released + release_pressure(map, &opened) * time_left),
+            .unwrap_or_else(|| released + release_pressure(valves, &opened) * time_left),
         (false, true) => closed.iter()
-            .map(|&next| parallel_to_open(map, distances, &closed, &opened, ParallelMoveState {
+            .map(|&next| parallel_to_open(valves, distances, &closed, &opened, ParallelMoveState {
                 p_curr: state.p_curr, p_next: state.p_next, p_progress: state.p_progress + distance + 1,
                 e_curr: state.e_next, e_next: next, e_progress: 0,
                 time_left, released,
             }))
             .max()
-            .unwrap_or_else(|| released + release_pressure(map, &opened) * time_left),
+            .unwrap_or_else(|| released + release_pressure(valves, &opened) * time_left),
         _ => unreachable!()
     }
 }
 
-fn parallel_max_for_start(data: &[Valve], start: usize, limit: u32) -> u32 {
-    let map = build_map(data);
+fn parallel_max_for_start(valves: &[Valve], start: usize, limit: u32) -> u32 {
     let start_state = ParallelMoveState {
         p_curr: start, p_next: start, p_progress: 0,
         e_curr: start, e_next: start, e_progress: 0,
         time_left: limit + 1, released: 0
     };
-    parallel_to_open(&map, &find_distances(&map, data), &closed_valves(data), &HashSet::new(), start_state)
+    parallel_to_open(valves, &find_distances(&valves), &closed_valves(valves), &HashSet::new(), start_state)
 }
 
 fn solve2((map, data): &(HashMap<&str, usize>, Vec<Valve>)) -> u32 {
