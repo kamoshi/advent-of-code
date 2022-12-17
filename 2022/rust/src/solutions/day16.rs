@@ -37,20 +37,6 @@ impl PartialOrd<Self> for State {
     }
 }
 
-
-fn closed_valves(valves: &[Valve]) -> HashSet<usize> {
-    valves.iter()
-        .filter(|valve| valve.rate != 0)
-        .map(|valve| valve.name)
-        .collect()
-}
-
-fn release_pressure(valves: &[Valve], keys: &HashSet<usize>) -> u32 {
-    keys.iter()
-        .map(|&key| valves[key].rate)
-        .sum()
-}
-
 fn find_distance(valves: &[Valve], start: usize, goal: usize) -> u32 {
     let mut frontier: BinaryHeap<State> = BinaryHeap::new();
     let mut costs: HashMap<usize, u32> = HashMap::from([(start, 0)]);
@@ -79,9 +65,43 @@ fn find_distances(valves: &[Valve]) -> HashMap<(usize, usize), u32> {
         .collect()
 }
 
+fn closed_valves(valves: &[Valve]) -> HashSet<usize> {
+    valves.iter()
+        .filter(|valve| valve.rate != 0)
+        .map(|valve| valve.name)
+        .collect()
+}
+
+fn closed_bitmap(valves: &[Valve]) -> u64 {
+    let mut bitmap = 0;
+    for valve in valves {
+        if valve.rate != 0 {
+            bitmap |= 1 << valve.name
+        }
+    }
+    bitmap
+}
+
+fn release_pressure(valves: &[Valve], keys: &HashSet<usize>) -> u32 {
+    keys.iter()
+        .map(|&key| valves[key].rate)
+        .sum()
+}
+
+fn release_bitmap(valves: &[Valve], bitmap: u64) -> u32 {
+    let mut sum = 0;
+    for valve in valves {
+        if valve.rate != 0 && bitmap & (1 << valve.name) == 0 {
+            sum += valve.rate
+        }
+    }
+    sum
+}
+
 struct MoveState {
     curr: usize,
     next: usize,
+    closed: u64,
     time_left: u32,
     released: u32,
 }
@@ -90,28 +110,32 @@ fn move_to_open(
     valves: &[Valve],
     distances: &HashMap<(usize, usize), u32>,
     closed: &HashSet<usize>,
-    opened: &HashSet<usize>,
     state: MoveState,
 ) -> u32 {
     let distance = state.time_left.min(*distances.get(&(state.curr, state.next)).unwrap());
-    let released = state.released + release_pressure(valves, opened) * distance;
+    let released = state.released + release_bitmap(valves, state.closed) * distance;
     if distance == state.time_left { return released };
     let curr = state.next;
 
-    let released = released + release_pressure(valves, opened);
+    let released = released + release_bitmap(valves, state.closed);
+    let closed_bm = state.closed ^ (1 << curr);
     let closed = { let mut closed = closed.clone(); closed.remove(&curr); closed };
-    let opened = { let mut opened = opened.clone(); opened.insert(curr); opened };
     let time_left = state.time_left - distance - 1;
 
     closed.iter()
-        .map(|&next| move_to_open(valves, distances, &closed, &opened, MoveState { curr, next, time_left, released }))
+        .map(|&next| move_to_open(valves, distances, &closed, MoveState { curr, next, closed: closed_bm, time_left, released }))
         .max()
-        .unwrap_or_else(|| released + release_pressure(valves, &opened) * time_left)
+        .unwrap_or_else(|| released + release_bitmap(valves, closed_bm) * time_left)
 }
 
 fn find_max_for_start(valves: &[Valve], start: usize, limit: u32) -> u32 {
-    let start_state = MoveState { curr: start, next: start, time_left: limit + 1, released: 0 };
-    move_to_open(&valves, &find_distances(&valves), &closed_valves(valves), &HashSet::new(), start_state)
+    move_to_open(&valves, &find_distances(&valves), &closed_valves(valves), MoveState {
+        curr: start,
+        next: start,
+        closed: closed_bitmap(valves),
+        time_left: limit + 1,
+        released: 0,
+    })
 }
 
 fn solve1((map, data): &(HashMap<&str, usize>, Vec<Valve>)) -> u32 {
