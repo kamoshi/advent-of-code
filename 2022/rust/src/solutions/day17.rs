@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 use crate::utils;
@@ -143,36 +144,37 @@ fn solve1(data: &[Wind]) -> usize {
 }
 
 fn solve2(data: &[Wind]) -> i64 {
+    const BIG: i64 = 1_000_000_000_000;
     let mut rocks = (0..ROCKS.len()).into_iter().cycle();
     let mut cave = Cave::new(data);
 
-    const BIG: i64 = 1_000_000_000_000;
+    // Loop until cycle found
+    let mut cycle_metadata = vec![];
+    loop {
+        cave.insert(rocks.next().unwrap()).map(|meta| cycle_metadata.push(meta));
+        if cycle_metadata.len() > 1 { break };
+    }
 
-    for _ in 0..2022 {
-        if let Some((prev, curr, hist)) = cave.insert(rocks.next().unwrap()) {
-            let (s, e) = (prev.0 - 1, curr.0 - 1);
-            let start = &hist[0..s];
-            let cycle = &hist[s..e];
-            let cycle_h = curr.1 - prev.1;
+    // We have to do this, because the first cycle can have corrupted height
+    let cycle_h = cycle_metadata.pop().map(|(prev, curr, _)| curr.1 - prev.1).unwrap();
 
-            let from_start = hist[s-1].1 as i64;
-            let rocks_left = BIG - start.len() as i64;
+    let (prev, curr, hist) = cycle_metadata.pop().unwrap();
+    let (s, e) = (prev.0 - 1, curr.0 - 1);
+    let start = &hist[0..s];
+    let cycle = &hist[s..e];
 
-            let from_cycle = (rocks_left / cycle.len() as i64) * cycle_h as i64;
-            let rocks_left = rocks_left % cycle.len() as i64;
+    let from_start = hist[s-1].1 as i64;
+    let rocks_left = BIG - start.len() as i64;
 
-            // let from_above = match rocks_left > 0 {
-            //     true => (cycle[rocks_left as usize - 1].1 - cycle[0].1) as i64,
-            //     false => 0,
-            // };
+    let from_cycle = (rocks_left / cycle.len() as i64) * cycle_h as i64;
+    let rocks_left = rocks_left % cycle.len() as i64;
 
-            let ok = from_start + from_cycle; // + from_above;
-            assert!(ok < 1527906974720);
-
-            return ok;
-        };
+    let from_above = match rocks_left > 0 {
+        true => (cycle[rocks_left as usize - 1].1 - cycle[0].1) as i64,
+        false => 0,
     };
-    -1
+
+    return from_start + from_cycle + from_above;
 }
 
 fn parse_data<T: AsRef<str>>(data: &[T]) -> Vec<Wind> {
