@@ -1,6 +1,5 @@
+use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
-use std::iter::Cycle;
-use std::vec::IntoIter;
 use crate::utils;
 
 
@@ -24,10 +23,12 @@ const ROCKS: [[u8; 4]; 5] = [
 ];
 
 
-#[derive(Clone)]
 struct Cave {
-    wind: Cycle<IntoIter<Wind>>,
+    wind: Box<dyn Iterator<Item=(usize, Wind)>>,
     hole: Vec<u8>,
+    memo: HashMap<(isize, usize), (usize, usize)>,
+    size: usize,
+    hist: Vec<(usize, usize)>,
 }
 
 impl Display for Cave {
@@ -48,19 +49,24 @@ enum Wind {
 impl Cave {
     fn new(wind: &[Wind]) -> Self {
         Cave {
-            wind: Vec::from(wind).into_iter().cycle(),
+            wind: Box::new(Vec::from(wind).into_iter().enumerate().cycle()),
             hole: vec![u8::MAX],
+            memo: HashMap::new(),
+            size: 0,
+            hist: vec![]
         }
     }
 
-    fn insert(&mut self, rock: usize) {
+    fn insert(&mut self, rock: usize) -> Option<((usize, usize), (usize, usize), Vec<(usize, usize)>)> {
         self.hole.resize(self.count_occupied() + 3 + ROCK_H[rock], 0);
 
         let mut offset: isize = 1;
         let mut height: usize = self.hole.len() - 1;
-
+        let mut offset_xor = 0;
         loop {
-            match self.wind.next().unwrap() {
+            let (wind_index, wind) = self.wind.next().unwrap();
+
+            match wind {
                 Wind::L => if offset < 3 && !self.check_collision(rock, offset + 1, height) {
                     offset += 1
                 },
@@ -69,11 +75,21 @@ impl Cave {
                 },
             }
 
+            offset_xor ^= offset;
+
             if self.check_collision(rock, offset, height - 1) {
                 self.add_rock(rock, offset, height);
-                break;
-            }
+                self.size += 1;
 
+                let curr = (self.size, self.count_occupied() - 1);
+                self.hist.push(curr);
+
+                return match rock == 0 {
+                    true => self.memo.insert((offset_xor, wind_index), curr)
+                        .map(|prev| (prev, curr, self.hist.drain(..).collect())),
+                    false => None,
+                }
+            }
             height -= 1;
         }
     }
@@ -126,8 +142,37 @@ fn solve1(data: &[Wind]) -> usize {
     cave.count_occupied() - 1 // first row is the bottom
 }
 
-fn solve2(data: &[Wind]) -> i32 {
-    2
+fn solve2(data: &[Wind]) -> i64 {
+    let mut rocks = (0..ROCKS.len()).into_iter().cycle();
+    let mut cave = Cave::new(data);
+
+    const BIG: i64 = 1_000_000_000_000;
+
+    for _ in 0..2022 {
+        if let Some((prev, curr, hist)) = cave.insert(rocks.next().unwrap()) {
+            let (s, e) = (prev.0 - 1, curr.0 - 1);
+            let start = &hist[0..s];
+            let cycle = &hist[s..e];
+            let cycle_h = curr.1 - prev.1;
+
+            let from_start = hist[s-1].1 as i64;
+            let rocks_left = BIG - start.len() as i64;
+
+            let from_cycle = (rocks_left / cycle.len() as i64) * cycle_h as i64;
+            let rocks_left = rocks_left % cycle.len() as i64;
+
+            // let from_above = match rocks_left > 0 {
+            //     true => (cycle[rocks_left as usize - 1].1 - cycle[0].1) as i64,
+            //     false => 0,
+            // };
+
+            let ok = from_start + from_cycle; // + from_above;
+            assert!(ok < 1527906974720);
+
+            return ok;
+        };
+    };
+    -1
 }
 
 fn parse_data<T: AsRef<str>>(data: &[T]) -> Vec<Wind> {
@@ -158,6 +203,6 @@ mod tests {
 
     #[test]
     fn part2() {
-        assert_eq!(2, solve2(&parse_data(DATA)));
+        assert_eq!(1514285714288, solve2(&parse_data(DATA)));
     }
 }
