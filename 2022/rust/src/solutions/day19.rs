@@ -1,4 +1,5 @@
-use std::collections::HashSet;
+#![allow(dead_code)]
+use std::collections::{HashMap, HashSet};
 use regex::{Captures, Regex};
 use crate::utils;
 
@@ -43,6 +44,7 @@ struct State {
 
 
 fn explore(blueprint: &Blueprint, start: State) -> i32 {
+    let mut optimal_geo: HashMap<i32, Geode> = HashMap::new();
     let mut visited = HashSet::new();
     let mut pending: Vec<State> = Vec::new();
     pending.push(start);
@@ -60,7 +62,11 @@ fn explore(blueprint: &Blueprint, start: State) -> i32 {
         if state.time_left == 0 {
             max_geodes = max_geodes.max(state.inv_geo);
             continue
-        }
+        };
+        match state.inv_geo + 2 < *optimal_geo.entry(state.time_left).or_default() {
+            true => continue,
+            false => optimal_geo.entry(state.time_left).and_modify(|v| *v = state.inv_geo.max(*v))
+        };
 
         // geode
         if state.inv_ore >= blueprint.geode.0 && state.inv_obs >= blueprint.geode.1 {
@@ -112,6 +118,7 @@ fn explore(blueprint: &Blueprint, start: State) -> i32 {
             });
         }
         // none
+        // why `3 / 2` you may ask? I don't know it's just the lowest multiple that still works ¯\_(ツ)_/¯
         if state.inv_ore <= max_req_ore && state.inv_cla <= max_req_cla * 3 / 2 && state.inv_obs <= max_req_obs {
             pending.push(State {
                 time_left: state.time_left - 1,
@@ -134,12 +141,11 @@ fn solve1(data: &[Blueprint]) -> i32 {
 }
 
 fn solve2(data: &[Blueprint]) -> i32 {
-    // let start_state = State { time_left: 32, bot_ore: 1, ..Default::default() };
-    // data.iter()
-    //     .take(3)
-    //     .map(|blueprint| blueprint.id * explore(blueprint, start_state))
-    //     .sum();
-    2
+    let start_state = State { time_left: 32, bot_ore: 1, ..Default::default() };
+    data.iter()
+        .take(3)
+        .map(|blueprint| explore(blueprint, start_state))
+        .product()
 }
 
 fn extract(cap: &Captures, at: usize) -> i32 {
@@ -181,6 +187,7 @@ mod tests {
 
     #[test]
     fn part2() {
-        assert_eq!(2, solve2(&parse_data(DATA)));
+        let s = State { time_left: 32, bot_ore: 1, ..Default::default() };
+        assert_eq!(62, parse_data(DATA).iter().take(3).map(|b| explore(b, s)).max().unwrap())
     }
 }
