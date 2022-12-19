@@ -62,13 +62,26 @@ fn explore(blueprint: &Blueprint, start: State) -> i32 {
             continue
         }
 
-        // ore
-        if state.inv_ore >= blueprint.ore && state.bot_ore <= max_req_ore {
+        // geode
+        if state.inv_ore >= blueprint.geode.0 && state.inv_obs >= blueprint.geode.1 {
             pending.push(State {
                 time_left: state.time_left - 1,
-                bot_ore: state.bot_ore + 1,
-                inv_ore: state.inv_ore + state.bot_ore - blueprint.ore,
+                bot_geo: state.bot_geo + 1,
+                inv_ore: state.inv_ore + state.bot_ore - blueprint.geode.0,
                 inv_cla: state.inv_cla + state.bot_cla,
+                inv_obs: state.inv_obs + state.bot_obs - blueprint.geode.1,
+                inv_geo: state.inv_geo + state.bot_geo,
+                ..state
+            });
+            continue
+        }
+        // obsidian
+        if state.inv_ore >= blueprint.obsidian.0 && state.inv_cla >= blueprint.obsidian.1 && state.bot_obs <= max_req_obs {
+            pending.push(State {
+                time_left: state.time_left - 1,
+                bot_obs: state.bot_obs + 1,
+                inv_ore: state.inv_ore + state.bot_ore - blueprint.obsidian.0,
+                inv_cla: state.inv_cla + state.bot_cla - blueprint.obsidian.1,
                 inv_obs: state.inv_obs + state.bot_obs,
                 inv_geo: state.inv_geo + state.bot_geo,
                 ..state
@@ -86,43 +99,28 @@ fn explore(blueprint: &Blueprint, start: State) -> i32 {
                 ..state
             })
         }
-        // obsidian
-        if state.inv_ore >= blueprint.obsidian.0 && state.inv_cla >= blueprint.obsidian.1 && state.bot_obs <= max_req_obs {
-            let haha = State {
+        // ore
+        if state.inv_ore >= blueprint.ore && state.bot_ore <= max_req_ore {
+            pending.push(State {
                 time_left: state.time_left - 1,
-                bot_obs: state.bot_obs + 1,
-                inv_ore: state.inv_ore + state.bot_ore - blueprint.obsidian.0,
-                inv_cla: state.inv_cla + state.bot_cla - blueprint.obsidian.1,
+                bot_ore: state.bot_ore + 1,
+                inv_ore: state.inv_ore + state.bot_ore - blueprint.ore,
+                inv_cla: state.inv_cla + state.bot_cla,
                 inv_obs: state.inv_obs + state.bot_obs,
                 inv_geo: state.inv_geo + state.bot_geo,
                 ..state
-            };
-            pending.push(haha);
-        }
-        // geode
-        if state.inv_ore >= blueprint.geode.0 && state.inv_obs >= blueprint.geode.1 {
-            pending.push(State {
-                time_left: state.time_left - 1,
-                bot_geo: state.bot_geo + 1,
-                inv_ore: state.inv_ore + state.bot_ore - blueprint.geode.0,
-                inv_cla: state.inv_cla + state.bot_cla,
-                inv_obs: state.inv_obs + state.bot_obs - blueprint.geode.1,
-                inv_geo: state.inv_geo + state.bot_geo,
-                ..state
             });
-            continue
         }
         // none
         if state.inv_ore <= max_req_ore && state.inv_cla <= max_req_cla * 3 / 2 && state.inv_obs <= max_req_obs {
-            let haha = State {
+            pending.push(State {
                 time_left: state.time_left - 1,
                 inv_ore: state.inv_ore + state.bot_ore,
                 inv_cla: state.inv_cla + state.bot_cla,
                 inv_obs: state.inv_obs + state.bot_obs,
                 inv_geo: state.inv_geo + state.bot_geo,
                 ..state
-            };
-            pending.push(haha);
+            });
         }
     }
     max_geodes
