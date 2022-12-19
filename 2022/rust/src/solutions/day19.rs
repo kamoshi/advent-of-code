@@ -43,7 +43,7 @@ struct State {
 
 
 fn explore(blueprint: &Blueprint, start: State) -> i32 {
-    let mut visited: HashSet<State> = HashSet::new();
+    let mut visited = HashSet::new();
     let mut pending: Vec<State> = Vec::new();
     pending.push(start);
 
@@ -62,19 +62,8 @@ fn explore(blueprint: &Blueprint, start: State) -> i32 {
             continue
         }
 
-        if state.inv_ore >= blueprint.geode.0 && state.inv_obs >= blueprint.geode.1 {
-            pending.push(State {
-                time_left: state.time_left - 1,
-                bot_geo: state.bot_geo + 1,
-                inv_ore: state.inv_ore + state.bot_ore - blueprint.geode.0,
-                inv_cla: state.inv_cla + state.bot_cla,
-                inv_obs: state.inv_obs + state.bot_obs - blueprint.geode.1,
-                inv_geo: state.inv_geo + state.bot_geo,
-                ..state
-            });
-        };
-
-        if state.inv_ore >= blueprint.ore && state.bot_ore < max_req_ore {
+        // ore
+        if state.inv_ore >= blueprint.ore && state.bot_ore <= max_req_ore {
             pending.push(State {
                 time_left: state.time_left - 1,
                 bot_ore: state.bot_ore + 1,
@@ -85,7 +74,8 @@ fn explore(blueprint: &Blueprint, start: State) -> i32 {
                 ..state
             });
         }
-        if state.inv_ore >= blueprint.clay && state.bot_cla < max_req_cla {
+        // clay
+        if state.inv_ore >= blueprint.clay && state.bot_cla <= max_req_cla {
             pending.push(State {
                 time_left: state.time_left - 1,
                 bot_cla: state.bot_cla + 1,
@@ -96,8 +86,9 @@ fn explore(blueprint: &Blueprint, start: State) -> i32 {
                 ..state
             })
         }
-        if state.inv_ore >= blueprint.obsidian.0 && state.inv_cla >= blueprint.obsidian.1 && state.bot_obs < max_req_obs {
-            pending.push(State {
+        // obsidian
+        if state.inv_ore >= blueprint.obsidian.0 && state.inv_cla >= blueprint.obsidian.1 && state.bot_obs <= max_req_obs {
+            let haha = State {
                 time_left: state.time_left - 1,
                 bot_obs: state.bot_obs + 1,
                 inv_ore: state.inv_ore + state.bot_ore - blueprint.obsidian.0,
@@ -105,17 +96,33 @@ fn explore(blueprint: &Blueprint, start: State) -> i32 {
                 inv_obs: state.inv_obs + state.bot_obs,
                 inv_geo: state.inv_geo + state.bot_geo,
                 ..state
-            });
+            };
+            pending.push(haha);
         }
-        if state.inv_ore < max_req_ore && state.inv_cla < max_req_cla && state.inv_obs < max_req_obs {
+        // geode
+        if state.inv_ore >= blueprint.geode.0 && state.inv_obs >= blueprint.geode.1 {
             pending.push(State {
+                time_left: state.time_left - 1,
+                bot_geo: state.bot_geo + 1,
+                inv_ore: state.inv_ore + state.bot_ore - blueprint.geode.0,
+                inv_cla: state.inv_cla + state.bot_cla,
+                inv_obs: state.inv_obs + state.bot_obs - blueprint.geode.1,
+                inv_geo: state.inv_geo + state.bot_geo,
+                ..state
+            });
+            continue
+        }
+        // none
+        if state.inv_ore <= max_req_ore && state.inv_cla <= max_req_cla * 3 / 2 && state.inv_obs <= max_req_obs {
+            let haha = State {
+                time_left: state.time_left - 1,
                 inv_ore: state.inv_ore + state.bot_ore,
                 inv_cla: state.inv_cla + state.bot_cla,
                 inv_obs: state.inv_obs + state.bot_obs,
                 inv_geo: state.inv_geo + state.bot_geo,
-                time_left: state.time_left - 1,
                 ..state
-            });
+            };
+            pending.push(haha);
         }
     }
     max_geodes
@@ -129,6 +136,11 @@ fn solve1(data: &[Blueprint]) -> i32 {
 }
 
 fn solve2(data: &[Blueprint]) -> i32 {
+    // let start_state = State { time_left: 32, bot_ore: 1, ..Default::default() };
+    // data.iter()
+    //     .take(3)
+    //     .map(|blueprint| blueprint.id * explore(blueprint, start_state))
+    //     .sum();
     2
 }
 
