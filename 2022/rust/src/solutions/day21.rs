@@ -19,12 +19,12 @@ enum Op {
 }
 
 impl Op {
-    fn apply(&self, a: i64, b: i64) -> i64 {
+    fn apply(&self, l: i64, r: i64) -> i64 {
         match self {
-            Op::Add => a + b,
-            Op::Sub => a - b,
-            Op::Mul => a * b,
-            Op::Div => a / b,
+            Op::Add => l + r,
+            Op::Sub => l - r,
+            Op::Mul => l * r,
+            Op::Div => l / r,
         }
     }
 }
@@ -49,13 +49,13 @@ fn chain_eval<'data, 'a>(
 ) {
     for &dependee in dependees.get(start).unwrap_or(&vec![]) {
         if let Some(&Shout::LazyOp(l, op, r)) = awaiting.get(dependee) {
-            match (finished.contains_key(l), finished.contains_key(r)) {
-                (true, true) => {
-                    finished.insert(dependee, op.apply(finished[l], finished[r]));
+            match (finished.get(l), finished.get(r)) {
+                (Some(&l), Some(&r)) => {
+                    finished.insert(dependee, op.apply(l, r));
                     awaiting.remove(dependee);
                     chain_eval(dependee, dependees, awaiting, finished);
                 }
-                _ => {},
+                _ => (),
             };
         }
     }
@@ -76,9 +76,9 @@ fn eval<'data, const SKIP_HUMAN: bool>(
                 chain_eval(monkey.name, &dependees, &mut awaiting, &mut finished);
             },
             Shout::LazyOp(l, op, r) =>
-                match (finished.contains_key(l), finished.contains_key(r)) {
-                    (true, true) => {
-                        finished.insert(monkey.name, op.apply(finished[l], finished[r]));
+                match (finished.get(l), finished.get(r)) {
+                    (Some(&l), Some(&r)) => {
+                        finished.insert(monkey.name, op.apply(l, r));
                         chain_eval(monkey.name, &dependees, &mut awaiting, &mut finished);
                     }
                     _ => {
@@ -166,9 +166,7 @@ fn parse_data<T: AsRef<str>>(data: &[T]) -> Vec<Monkey> {
                     Shout::LazyOp(operands.next().unwrap(), op, operands.nth(1).unwrap())
                 }
             };
-            Monkey {
-                name, shout
-            }
+            Monkey { name, shout }
         })
         .collect()
 }
