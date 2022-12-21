@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use std::collections::HashMap;
 use crate::utils;
 
@@ -90,15 +91,48 @@ fn solve1(data: &[Monkey]) -> i64 {
     finished["root"]
 }
 
+fn go_back<'data, 'a>(
+    finished: &'a HashMap<&'data str, i64>,
+    awaiting: &'a HashMap<&'data str, Shout<'data>>,
+    blocker: &'data str,
+    required: i64,
+) -> i64 {
+    if blocker == "humn" { return required };
+    match awaiting[blocker] {
+        Shout::LazyOp(l, op, r) => {
+            match (finished.get(l), finished.get(r)) {
+                (Some(&l), None) => {
+                    let next = match op {
+                        Op::Add => required - l,
+                        Op::Sub => l - required,
+                        Op::Mul => required / l,
+                        Op::Div => l / required,
+                    };
+                    go_back(finished, awaiting, r, next)
+                },
+                (None, Some(&r)) => {
+                    let next = match op {
+                        Op::Add => required - r,
+                        Op::Sub => required + r,
+                        Op::Mul => required / r,
+                        Op::Div => required * r,
+                    };
+                    go_back(finished, awaiting, l, next)
+                },
+                _ => unreachable!(),
+            }
+        },
+        _ => unreachable!(),
+    }
+}
+
 fn solve2(data: &[Monkey]) -> i64 {
     let mut finished = HashMap::new();
     let mut awaiting = HashMap::new();
     let mut dependees = HashMap::new();
 
     for monkey in data {
-        if monkey.name == "humn" {
-            continue
-        };
+        if monkey.name == "humn" { continue };
         match monkey.shout {
             Shout::Number(n) => {
                 finished.insert(monkey.name, n);
@@ -121,11 +155,14 @@ fn solve2(data: &[Monkey]) -> i64 {
 
     match awaiting["root"] {
         Shout::LazyOp(l, _, r)=> {
-            println!("hi");
+            match (finished.get(l), finished.get(r)) {
+                (Some(l), None) => go_back(&finished, &awaiting, r, *l),
+                (None, Some(r)) => go_back(&finished, &awaiting, l, *r),
+                _ => unreachable!(),
+            }
         },
         _ => unreachable!(),
-    };
-    2
+    }
 }
 
 
@@ -184,7 +221,6 @@ mod tests {
 
     #[test]
     fn part2() {
-        let data = parse_data(DATA);
-        assert_eq!(2, solve2(&data));
+        assert_eq!(301, solve2(&parse_data(DATA)));
     }
 }
