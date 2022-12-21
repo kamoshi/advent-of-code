@@ -61,13 +61,15 @@ fn chain_eval<'data, 'a>(
     }
 }
 
-
-fn solve1(data: &[Monkey]) -> i64 {
+fn eval_state<'data, const SKIP_HUMAN: bool>(
+    data: &'data [Monkey]
+) -> (HashMap<&'data str, i64>, HashMap<&'data str, Shout<'data>>) {
     let mut finished = HashMap::new();
     let mut awaiting = HashMap::new();
     let mut dependees = HashMap::new();
 
     for monkey in data {
+        if SKIP_HUMAN && monkey.name == "humn" { continue };
         match monkey.shout {
             Shout::Number(n) => {
                 finished.insert(monkey.name, n);
@@ -88,7 +90,12 @@ fn solve1(data: &[Monkey]) -> i64 {
         };
     }
 
-    finished["root"]
+    (finished, awaiting)
+}
+
+
+fn solve1(data: &[Monkey]) -> i64 {
+    eval_state::<false>(data).0["root"]
 }
 
 fn go_back<'data, 'a>(
@@ -127,32 +134,7 @@ fn go_back<'data, 'a>(
 }
 
 fn solve2(data: &[Monkey]) -> i64 {
-    let mut finished = HashMap::new();
-    let mut awaiting = HashMap::new();
-    let mut dependees = HashMap::new();
-
-    for monkey in data {
-        if monkey.name == "humn" { continue };
-        match monkey.shout {
-            Shout::Number(n) => {
-                finished.insert(monkey.name, n);
-                chain_eval(monkey.name, &dependees, &mut awaiting, &mut finished);
-            },
-            Shout::LazyOp(l, op, r) =>
-                match (finished.contains_key(l), finished.contains_key(r)) {
-                    (true, true) => {
-                        finished.insert(monkey.name, op.apply(finished[l], finished[r]));
-                        chain_eval(monkey.name, &dependees, &mut awaiting, &mut finished);
-                    }
-                    _ => {
-                        awaiting.insert(monkey.name, monkey.shout);
-                        dependees.entry(l).or_insert(vec![]).push(monkey.name);
-                        dependees.entry(r).or_insert(vec![]).push(monkey.name);
-                    }
-                },
-        };
-    }
-
+    let (finished, awaiting) = eval_state::<true>(data);
     match awaiting["root"] {
         Shout::LazyOp(l, _, r)=> {
             match (finished.get(l), finished.get(r)) {
