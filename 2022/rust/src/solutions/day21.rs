@@ -27,6 +27,24 @@ impl Op {
             Op::Div => l / r,
         }
     }
+
+    fn unapply_l(&self, res: i64, l: i64) -> i64 {
+        match self {
+            Op::Add => res - l,
+            Op::Sub => l - res,
+            Op::Mul => res / l,
+            Op::Div => l / res,
+        }
+    }
+
+    fn unapply_r(&self, res: i64, r: i64) -> i64 {
+        match self {
+            Op::Add => res - r,
+            Op::Sub => res + r,
+            Op::Mul => res / r,
+            Op::Div => res * r,
+        }
+    }
 }
 
 #[derive(Copy, Clone)]
@@ -109,22 +127,10 @@ fn go_back<'data, 'a>(
         Shout::LazyOp(l, op, r) => {
             match (finished.get(l), finished.get(r)) {
                 (Some(&l), None) => {
-                    let next = match op {
-                        Op::Add => required - l,
-                        Op::Sub => l - required,
-                        Op::Mul => required / l,
-                        Op::Div => l / required,
-                    };
-                    go_back(finished, awaiting, r, next)
+                    go_back(finished, awaiting, r, op.unapply_l(required, l))
                 },
                 (None, Some(&r)) => {
-                    let next = match op {
-                        Op::Add => required - r,
-                        Op::Sub => required + r,
-                        Op::Mul => required / r,
-                        Op::Div => required * r,
-                    };
-                    go_back(finished, awaiting, l, next)
+                    go_back(finished, awaiting, l, op.unapply_r(required, r))
                 },
                 _ => unreachable!(),
             }
