@@ -22,5 +22,6 @@ fn main() {
     // solutions::day17::run();
     // solutions::day18::run();
     // solutions::day19::run();
-    solutions::day20::run();
+    // solutions::day20::run();
+    solutions::day21::run();
 }
