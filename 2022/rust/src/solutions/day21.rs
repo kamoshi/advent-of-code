@@ -91,6 +91,40 @@ fn solve1(data: &[Monkey]) -> i64 {
 }
 
 fn solve2(data: &[Monkey]) -> i64 {
+    let mut finished = HashMap::new();
+    let mut awaiting = HashMap::new();
+    let mut dependees = HashMap::new();
+
+    for monkey in data {
+        if monkey.name == "humn" {
+            continue
+        };
+        match monkey.shout {
+            Shout::Number(n) => {
+                finished.insert(monkey.name, n);
+                chain_eval(monkey.name, &dependees, &mut awaiting, &mut finished);
+            },
+            Shout::LazyOp(l, op, r) =>
+                match (finished.contains_key(l), finished.contains_key(r)) {
+                    (true, true) => {
+                        finished.insert(monkey.name, op.apply(finished[l], finished[r]));
+                        chain_eval(monkey.name, &dependees, &mut awaiting, &mut finished);
+                    }
+                    _ => {
+                        awaiting.insert(monkey.name, monkey.shout);
+                        dependees.entry(l).or_insert(vec![]).push(monkey.name);
+                        dependees.entry(r).or_insert(vec![]).push(monkey.name);
+                    }
+                },
+        };
+    }
+
+    match awaiting["root"] {
+        Shout::LazyOp(l, _, r)=> {
+            println!("hi");
+        },
+        _ => unreachable!(),
+    };
     2
 }
 
