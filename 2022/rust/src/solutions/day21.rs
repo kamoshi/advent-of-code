@@ -61,7 +61,7 @@ fn chain_eval<'data, 'a>(
     }
 }
 
-fn eval_state<'data, const SKIP_HUMAN: bool>(
+fn eval<'data, const SKIP_HUMAN: bool>(
     data: &'data [Monkey]
 ) -> (HashMap<&'data str, i64>, HashMap<&'data str, Shout<'data>>) {
     let mut finished = HashMap::new();
@@ -95,7 +95,7 @@ fn eval_state<'data, const SKIP_HUMAN: bool>(
 
 
 fn solve1(data: &[Monkey]) -> i64 {
-    eval_state::<false>(data).0["root"]
+    eval::<false>(data).0["root"]
 }
 
 fn go_back<'data, 'a>(
@@ -134,7 +134,7 @@ fn go_back<'data, 'a>(
 }
 
 fn solve2(data: &[Monkey]) -> i64 {
-    let (finished, awaiting) = eval_state::<true>(data);
+    let (finished, awaiting) = eval::<true>(data);
     match awaiting["root"] {
         Shout::LazyOp(l, _, r)=> {
             match (finished.get(l), finished.get(r)) {
