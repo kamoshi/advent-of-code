@@ -133,7 +133,7 @@ impl<'a> Dungeon<'a> {
             let next_pos = self.npp.get_next_pos(self.pos, self.dir);
             match self.map[&next_pos] {
                 Tile::Wall => continue,
-                Tile::Empty => self.pos = pos,
+                Tile::Empty => self.pos = next_pos,
             }
         }
     }
@@ -143,7 +143,6 @@ impl<'a> Dungeon<'a> {
     }
 }
 
-
 fn solve1((start, map, commands): &(Point, Map, Commands)) -> usize {
     let mut dungeon = Dungeon::new(map, *start, Facing::R, Box::new(WrappingPosProvider::new(&map)));
     for action in commands {
@@ -152,8 +151,27 @@ fn solve1((start, map, commands): &(Point, Map, Commands)) -> usize {
     dungeon.get_password()
 }
 
-fn solve2(data: &(Point, Map, Commands)) -> i32 {
-    2
+
+struct HardcodedCubeProvider;
+
+impl HardcodedCubeProvider {
+    fn new() -> Self {
+        Self
+    }
+}
+
+impl NextPosProvider for HardcodedCubeProvider {
+    fn get_next_pos(&self, pos: Point, dir: Facing) -> Point {
+        todo!()
+    }
+}
+
+fn solve2((start, map, commands): &(Point, Map, Commands)) -> usize {
+    let mut dungeon = Dungeon::new(map, *start, Facing::R, Box::new(HardcodedCubeProvider::new()));
+    for action in commands {
+        dungeon.act(action)
+    };
+    dungeon.get_password()
 }
 
 
@@ -219,9 +237,9 @@ mod tests {
         assert_eq!(6032, solve1(&data));
     }
 
-    #[test]
-    fn part2() {
-        let data = parse_data(DATA);
-        assert_eq!(2, solve2(&data));
-    }
+    // #[test]
+    // fn part2() {
+    //     let data = parse_data(DATA);
+    //     assert_eq!(2, solve2(&data));
+    // }
 }
