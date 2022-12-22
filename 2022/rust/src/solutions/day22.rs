@@ -20,8 +20,27 @@ enum Action {
     Move(usize), L, R
 }
 
-enum Dir {
-    U, D, L, R
+impl Action {
+    fn apply(&self, facing: &Facing) -> Facing {
+        match (self, facing) {
+            (Action::L, Facing::R) => Facing::U,
+            (Action::L, Facing::D) => Facing::R,
+            (Action::L, Facing::L) => Facing::D,
+            (Action::L, Facing::U) => Facing::L,
+            (Action::R, Facing::R) => Facing::D,
+            (Action::R, Facing::D) => Facing::L,
+            (Action::R, Facing::L) => Facing::U,
+            (Action::R, Facing::U) => Facing::R,
+            _ => panic!(),
+        }
+    }
+}
+
+enum Facing {
+    R = 0,
+    D = 1,
+    L = 2,
+    U = 3,
 }
 
 type Point = (usize, usize);
@@ -29,10 +48,38 @@ type Map = HashMap<Point, Tile>;
 type Commands = Vec<Action>;
 
 struct Dungeon {
-    pos: Point,
-    dir: Dir,
     map: Map,
+    pos: Point,
+    dir: Facing,
+}
 
+impl Dungeon {
+    fn new(map: Map, pos: Point, dir: Facing) -> Self {
+        Self { map, pos, dir }
+    }
+
+    fn act(&mut self, action: Action) {
+        match action {
+            Action::Move(steps) => self.walk(steps),
+            rotate => self.dir = rotate.apply(&self.dir),
+        }
+    }
+
+    fn walk(&mut self, steps: usize) {
+        for _ in 0..steps {
+            match self.dir {
+                Facing::R => {}
+                Facing::D => {}
+                Facing::L => {}
+                Facing::U => {}
+            }
+            todo!()
+        }
+    }
+
+    fn next_tile(&self) -> (Point, Tile) {
+        todo!()
+    }
 }
 
 
@@ -71,8 +118,8 @@ fn parse_data<T: AsRef<str>>(data: &[T]) -> (Point, Map, Commands) {
     let commands = data.iter().skip_while(|line| !line.as_ref().is_empty()).nth(1).unwrap().as_ref();
     let commands = re.find_iter(commands)
         .map(|cap| match cap.as_str() {
-            "R" => Action::Right,
-            "L" => Action::Left,
+            "R" => Action::R,
+            "L" => Action::L,
             _ => Action::Move(cap.as_str().parse().unwrap()),
         })
         .collect();
