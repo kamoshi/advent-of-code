@@ -64,8 +64,8 @@ impl<'a> Dungeon<'a> {
         let (row_bounds, col_bounds) = map.keys()
             .fold((HashMap::<usize, (usize, usize)>::new(), HashMap::<usize, (usize, usize)>::new()),
                   |(mut rows, mut cols), &(r, c)| {
-                      rows.entry(r).and_modify(|mut x| *x = (x.0.min(c), x.1.max(c))).or_insert((c, c));
-                      cols.entry(c).and_modify(|mut x| *x = (x.0.min(r), x.1.max(r))).or_insert((r, r));
+                      rows.entry(r).and_modify(|x| *x = (x.0.min(c), x.1.max(c))).or_insert((c, c));
+                      cols.entry(c).and_modify(|x| *x = (x.0.min(r), x.1.max(r))).or_insert((r, r));
                       (rows, cols)
                   });
         Self { map, pos, dir, row_bounds, col_bounds }
@@ -200,7 +200,7 @@ mod tests {
     #[test]
     fn part1() {
         let data = parse_data(DATA);
-        assert_eq!(1, solve1(&data));
+        assert_eq!(6032, solve1(&data));
     }
 
     #[test]
