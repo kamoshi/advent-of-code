@@ -12,10 +12,12 @@ pub fn run() -> () {
 }
 
 
+#[derive(Copy, Clone)]
 enum Tile {
     Empty, Wall
 }
 
+#[derive(Copy, Clone)]
 enum Action {
     Move(usize), L, R
 }
@@ -36,6 +38,8 @@ impl Action {
     }
 }
 
+#[derive(Copy, Clone)]
+#[repr(usize)]
 enum Facing {
     R = 0,
     D = 1,
@@ -64,38 +68,72 @@ impl<'a> Dungeon<'a> {
                       cols.entry(c).and_modify(|mut x| *x = (x.0.min(r), x.1.max(r))).or_insert((r, r));
                       (rows, cols)
                   });
-        println!("{:?}", row_bounds);
         Self { map, pos, dir, row_bounds, col_bounds }
     }
 
-    fn act(&mut self, action: Action) {
+    fn act(&mut self, action: &Action) {
         match action {
-            Action::Move(steps) => self.walk(steps),
+            Action::Move(steps) => self.walk(*steps),
             rotate => self.dir = rotate.apply(&self.dir),
         }
     }
 
     fn walk(&mut self, steps: usize) {
         for _ in 0..steps {
-            match self.dir {
-                Facing::R => {}
-                Facing::D => {}
-                Facing::L => {}
-                Facing::U => {}
+            let pos = self.next_pos();
+            match self.map[&pos] {
+                Tile::Wall => continue,
+                Tile::Empty => self.pos = pos,
             }
-            todo!()
         }
     }
 
-    fn next_tile(&self) -> (Point, Tile) {
-        todo!()
+    fn next_pos(&self) -> Point {
+        let (row, col) = self.pos;
+        match self.dir {
+            Facing::R => {
+                let (min, max) = self.row_bounds[&row];
+                match col < max {
+                    true => (row, col + 1),
+                    false => (row, min),
+                }
+            },
+            Facing::D => {
+                let (min, max) = self.col_bounds[&col];
+                match row < max {
+                    true => (row + 1, col),
+                    false => (min, col),
+                }
+            },
+            Facing::L => {
+                let (min, max) = self.row_bounds[&row];
+                match min < col {
+                    true => (row, col - 1),
+                    false => (row, max),
+                }
+            },
+            Facing::U => {
+                let (min, max) = self.col_bounds[&col];
+                match min < row {
+                    true => (row - 1, col),
+                    false => (max, col),
+                }
+            },
+        }
+    }
+
+    fn get_password(&self) -> usize {
+        1000 * (self.pos.0 + 1) + 4 * (self.pos.1 + 1) + self.dir as usize
     }
 }
 
 
-fn solve1((start, map, commands): &(Point, Map, Commands)) -> i32 {
+fn solve1((start, map, commands): &(Point, Map, Commands)) -> usize {
     let mut dungeon = Dungeon::new(map, *start, Facing::R);
-    1
+    for action in commands {
+        dungeon.act(action)
+    };
+    dungeon.get_password()
 }
 
 fn solve2(data: &(Point, Map, Commands)) -> i32 {
