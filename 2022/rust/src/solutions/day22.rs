@@ -38,7 +38,7 @@ impl Action {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 #[repr(usize)]
 enum Facing {
     R = 0,
@@ -165,7 +165,7 @@ fn solve1((start, map, commands): &(Point, Map, Commands)) -> usize {
     dungeon.get_password()
 }
 
-
+// Welcome to the cursed manifold zone
 struct HardcodedCubeProvider;
 impl HardcodedCubeProvider {
     fn new() -> Self { Self }
@@ -176,19 +176,19 @@ impl NextPosProvider for HardcodedCubeProvider {
     fn get_next_pos(&self, pos: Point, dir: Facing) -> (Point, Facing) {
         use Facing::*;
         match (pos.0, pos.1, dir) {
-            (0, 50..=99, U) => todo!(),
+            (0, 50..=99, U) => ((pos.1 + 100, 0), R), // (0,50) -> (150,0)
             (0, 100..=149, U) => todo!(),
-            (0..=49, 50, L) => todo!(),
+            (0..=49, 50, L) => ((149 - pos.0, 0), R), // (0,50) -> (149,0)
             (0..=49, 149, R) => todo!(),
             (49, 100..=149, D) => todo!(),
-            (50..=99, 50, L) => todo!(),
+            (50..=99, 50, L) => ((100, pos.0 - 50), D), // (50,50) -> (100,0)
             (50..=99, 99, R) => todo!(),
-            (100, 0..=49, U) => todo!(),
-            (100..=149, 0, L) => todo!(),
-            (100..=149, 99, R) => todo!(),
-            (149, 50..=99, D) => todo!(),
+            (100, 0..=49, U) => ((pos.1 + 50, 50), R), // (100,0) -> (50,50)
+            (100..=149, 0, L) => ((149 - pos.0, 50), R), // (100,0) -> (49, 50)
+            (100..=149, 99, R) => ((149 - pos.0, 149), L), // (100, 99) -> (49, 149)
+            (149, 50..=99, D) => ((pos.1 + 100, 49), L), // (149,50) -> (150,49)
             (150..=199, 0, L) => todo!(),
-            (150..=199, 49, R) => todo!(),
+            (150..=199, 49, R) => ((149, pos.0 - 100), U), // (150,49) -> (149, 50)
             (199, 0..=49, D) => todo!(),
             _ => (dir.apply(pos), dir)
         }
