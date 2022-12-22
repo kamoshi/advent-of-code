@@ -47,12 +47,23 @@ enum Facing {
     U = 3,
 }
 
+impl Facing {
+    fn apply(&self, (r, c): Point) -> Point {
+        match self {
+            Facing::R => (r, c + 1),
+            Facing::D => (r + 1, c),
+            Facing::L => (r, c - 1),
+            Facing::U => (r - 1, c),
+        }
+    }
+}
+
 type Point = (usize, usize);
 type Map = HashMap<Point, Tile>;
 type Commands = Vec<Action>;
 
 trait NextPosProvider {
-    fn get_next_pos(&self, pos: Point, dir: Facing) -> Point;
+    fn get_next_pos(&self, pos: Point, dir: Facing) -> (Point, Facing);
 }
 
 struct WrappingPosProvider {
@@ -74,35 +85,35 @@ impl WrappingPosProvider {
 }
 
 impl NextPosProvider for WrappingPosProvider {
-    fn get_next_pos(&self, pos: Point, dir: Facing) -> Point {
+    fn get_next_pos(&self, pos: Point, dir: Facing) -> (Point, Facing) {
         let (row, col) = pos;
         match dir {
             Facing::R => {
                 let (min, max) = self.row_bounds[&row];
                 match col < max {
-                    true => (row, col + 1),
-                    false => (row, min),
+                    true => (dir.apply(pos), dir),
+                    false => ((row, min), dir),
                 }
             },
             Facing::D => {
                 let (min, max) = self.col_bounds[&col];
                 match row < max {
-                    true => (row + 1, col),
-                    false => (min, col),
+                    true => (dir.apply(pos), dir),
+                    false => ((min, col), dir),
                 }
             },
             Facing::L => {
                 let (min, max) = self.row_bounds[&row];
                 match min < col {
-                    true => (row, col - 1),
-                    false => (row, max),
+                    true => (dir.apply(pos), dir),
+                    false => ((row, max), dir),
                 }
             },
             Facing::U => {
                 let (min, max) = self.col_bounds[&col];
                 match min < row {
-                    true => (row - 1, col),
-                    false => (max, col),
+                    true => (dir.apply(pos), dir),
+                    false => ((max, col), dir),
                 }
             },
         }
@@ -130,10 +141,13 @@ impl<'a> Dungeon<'a> {
 
     fn walk(&mut self, steps: usize) {
         for _ in 0..steps {
-            let next_pos = self.npp.get_next_pos(self.pos, self.dir);
+            let (next_pos, next_dir) = self.npp.get_next_pos(self.pos, self.dir);
             match self.map[&next_pos] {
                 Tile::Wall => continue,
-                Tile::Empty => self.pos = next_pos,
+                Tile::Empty => {
+                    self.pos = next_pos;
+                    self.dir = next_dir;
+                },
             }
         }
     }
@@ -153,16 +167,31 @@ fn solve1((start, map, commands): &(Point, Map, Commands)) -> usize {
 
 
 struct HardcodedCubeProvider;
-
 impl HardcodedCubeProvider {
-    fn new() -> Self {
-        Self
-    }
+    fn new() -> Self { Self }
 }
 
 impl NextPosProvider for HardcodedCubeProvider {
-    fn get_next_pos(&self, pos: Point, dir: Facing) -> Point {
-        todo!()
+    // Lord, forgive me for what I'm about to code
+    fn get_next_pos(&self, pos: Point, dir: Facing) -> (Point, Facing) {
+        use Facing::*;
+        match (pos.0, pos.1, dir) {
+            (0, 50..=99, U) => todo!(),
+            (0, 100..=149, U) => todo!(),
+            (0..=49, 50, L) => todo!(),
+            (0..=49, 149, R) => todo!(),
+            (49, 100..=149, D) => todo!(),
+            (50..=99, 50, L) => todo!(),
+            (50..=99, 99, R) => todo!(),
+            (100, 0..=49, U) => todo!(),
+            (100..=149, 0, L) => todo!(),
+            (100..=149, 99, R) => todo!(),
+            (149, 50..=99, D) => todo!(),
+            (150..=199, 0, L) => todo!(),
+            (150..=199, 49, R) => todo!(),
+            (199, 0..=49, D) => todo!(),
+            _ => (dir.apply(pos), dir)
+        }
     }
 }
 
