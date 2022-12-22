@@ -51,16 +51,17 @@ type Point = (usize, usize);
 type Map = HashMap<Point, Tile>;
 type Commands = Vec<Action>;
 
-struct Dungeon<'a> {
-    map: &'a Map,
-    pos: Point,
-    dir: Facing,
+trait NextPosProvider {
+    fn get_next_pos(&self, pos: Point, dir: Facing) -> Point;
+}
+
+struct WrappingPosProvider {
     row_bounds: HashMap<usize, (usize, usize)>,
     col_bounds: HashMap<usize, (usize, usize)>,
 }
 
-impl<'a> Dungeon<'a> {
-    fn new<'data>(map: &'data Map, pos: Point, dir: Facing) -> Self where 'data: 'a {
+impl WrappingPosProvider {
+    fn new(map: &Map) -> Self {
         let (row_bounds, col_bounds) = map.keys()
             .fold((HashMap::<usize, (usize, usize)>::new(), HashMap::<usize, (usize, usize)>::new()),
                   |(mut rows, mut cols), &(r, c)| {
@@ -68,29 +69,14 @@ impl<'a> Dungeon<'a> {
                       cols.entry(c).and_modify(|x| *x = (x.0.min(r), x.1.max(r))).or_insert((r, r));
                       (rows, cols)
                   });
-        Self { map, pos, dir, row_bounds, col_bounds }
+        Self { row_bounds, col_bounds }
     }
+}
 
-    fn act(&mut self, action: &Action) {
-        match action {
-            Action::Move(steps) => self.walk(*steps),
-            rotate => self.dir = rotate.apply(&self.dir),
-        }
-    }
-
-    fn walk(&mut self, steps: usize) {
-        for _ in 0..steps {
-            let pos = self.next_pos();
-            match self.map[&pos] {
-                Tile::Wall => continue,
-                Tile::Empty => self.pos = pos,
-            }
-        }
-    }
-
-    fn next_pos(&self) -> Point {
-        let (row, col) = self.pos;
-        match self.dir {
+impl NextPosProvider for WrappingPosProvider {
+    fn get_next_pos(&self, pos: Point, dir: Facing) -> Point {
+        let (row, col) = pos;
+        match dir {
             Facing::R => {
                 let (min, max) = self.row_bounds[&row];
                 match col < max {
@@ -121,6 +107,36 @@ impl<'a> Dungeon<'a> {
             },
         }
     }
+}
+
+struct Dungeon<'a> {
+    map: &'a Map,
+    pos: Point,
+    dir: Facing,
+    npp: Box<dyn NextPosProvider>,
+}
+
+impl<'a> Dungeon<'a> {
+    fn new<'data>(map: &'data Map, pos: Point, dir: Facing, npp: Box<dyn NextPosProvider>) -> Self where 'data: 'a {
+        Self { map, pos, dir, npp }
+    }
+
+    fn act(&mut self, action: &Action) {
+        match action {
+            Action::Move(steps) => self.walk(*steps),
+            rotate => self.dir = rotate.apply(&self.dir),
+        }
+    }
+
+    fn walk(&mut self, steps: usize) {
+        for _ in 0..steps {
+            let next_pos = self.npp.get_next_pos(self.pos, self.dir);
+            match self.map[&next_pos] {
+                Tile::Wall => continue,
+                Tile::Empty => self.pos = pos,
+            }
+        }
+    }
 
     fn get_password(&self) -> usize {
         1000 * (self.pos.0 + 1) + 4 * (self.pos.1 + 1) + self.dir as usize
@@ -129,7 +145,7 @@ impl<'a> Dungeon<'a> {
 
 
 fn solve1((start, map, commands): &(Point, Map, Commands)) -> usize {
-    let mut dungeon = Dungeon::new(map, *start, Facing::R);
+    let mut dungeon = Dungeon::new(map, *start, Facing::R, Box::new(WrappingPosProvider::new(&map)));
     for action in commands {
         dungeon.act(action)
     };
