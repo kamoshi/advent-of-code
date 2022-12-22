@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use regex::Regex;
 use crate::utils;
 
@@ -47,15 +47,25 @@ type Point = (usize, usize);
 type Map = HashMap<Point, Tile>;
 type Commands = Vec<Action>;
 
-struct Dungeon {
-    map: Map,
+struct Dungeon<'a> {
+    map: &'a Map,
     pos: Point,
     dir: Facing,
+    row_bounds: HashMap<usize, (usize, usize)>,
+    col_bounds: HashMap<usize, (usize, usize)>,
 }
 
-impl Dungeon {
-    fn new(map: Map, pos: Point, dir: Facing) -> Self {
-        Self { map, pos, dir }
+impl<'a> Dungeon<'a> {
+    fn new<'data>(map: &'data Map, pos: Point, dir: Facing) -> Self where 'data: 'a {
+        let (row_bounds, col_bounds) = map.keys()
+            .fold((HashMap::<usize, (usize, usize)>::new(), HashMap::<usize, (usize, usize)>::new()),
+                  |(mut rows, mut cols), &(r, c)| {
+                      rows.entry(r).and_modify(|mut x| *x = (x.0.min(c), x.1.max(c))).or_insert((c, c));
+                      cols.entry(c).and_modify(|mut x| *x = (x.0.min(r), x.1.max(r))).or_insert((r, r));
+                      (rows, cols)
+                  });
+        println!("{:?}", row_bounds);
+        Self { map, pos, dir, row_bounds, col_bounds }
     }
 
     fn act(&mut self, action: Action) {
@@ -83,7 +93,8 @@ impl Dungeon {
 }
 
 
-fn solve1(data: &(Point, Map, Commands)) -> i32 {
+fn solve1((start, map, commands): &(Point, Map, Commands)) -> i32 {
+    let mut dungeon = Dungeon::new(map, *start, Facing::R);
     1
 }
 
