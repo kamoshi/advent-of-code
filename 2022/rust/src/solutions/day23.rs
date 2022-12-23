@@ -29,36 +29,31 @@ impl Loc {
     fn se(&self) -> Self { Self { row: self.row + 1, col: self.col + 1 } }
 }
 
+#[inline(always)]
 fn has_neighbors(occupied: &HashSet<Loc>, loc: Loc) -> bool {
-    [loc.n(), loc.s(), loc.w(), loc.e(), loc.nw(), loc.ne(), loc.sw(), loc.se()].into_iter().any(|loc| occupied.contains(&loc))
+    [loc.n(), loc.s(), loc.w(), loc.e(), loc.nw(), loc.ne(), loc.sw(), loc.se()].into_iter()
+        .any(|loc| occupied.contains(&loc))
+}
+
+#[inline(always)]
+fn check_empty(occupied: &HashSet<Loc>, locs: [Loc; 3]) -> bool {
+    locs.into_iter().all(|loc| !occupied.contains(&loc))
 }
 
 fn move_n(occupied: &HashSet<Loc>, loc: Loc) -> Option<Loc> {
-    let nn = !occupied.contains(&loc.n());
-    let ne = !occupied.contains(&loc.ne());
-    let nw = !occupied.contains(&loc.nw());
-    (nn && ne && nw).then_some(loc.n())
+    check_empty(occupied, [loc.n(), loc.ne(), loc.nw()]).then_some(loc.n())
 }
 
 fn move_s(occupied: &HashSet<Loc>, loc: Loc) -> Option<Loc> {
-    let ss = !occupied.contains(&loc.s());
-    let se = !occupied.contains(&loc.se());
-    let sw = !occupied.contains(&loc.sw());
-    (ss && se && sw).then_some(loc.s())
+    check_empty(occupied, [loc.s(), loc.se(), loc.sw()]).then_some(loc.s())
 }
 
 fn move_w(occupied: &HashSet<Loc>, loc: Loc) -> Option<Loc> {
-    let ww = !occupied.contains(&loc.w());
-    let nw = !occupied.contains(&loc.nw());
-    let sw = !occupied.contains(&loc.sw());
-    (ww && nw && sw).then_some(loc.w())
+    check_empty(occupied, [loc.w(), loc.nw(), loc.sw()]).then_some(loc.w())
 }
 
 fn move_e(occupied: &HashSet<Loc>, loc: Loc) -> Option<Loc> {
-    let ee = !occupied.contains(&loc.e());
-    let ne = !occupied.contains(&loc.ne());
-    let se = !occupied.contains(&loc.se());
-    (ee && ne && se).then_some(loc.e())
+    check_empty(occupied, [loc.e(), loc.ne(), loc.se()]).then_some(loc.e())
 }
 
 fn find_bounds(locs: &HashSet<Loc>) -> ((isize, isize), (isize, isize)) {
@@ -67,34 +62,13 @@ fn find_bounds(locs: &HashSet<Loc>) -> ((isize, isize), (isize, isize)) {
     })
 }
 
-fn draw(elves: &Vec<Loc>) {
-    let elves = HashSet::<Loc>::from_iter(elves.iter().copied());
+fn count_empty(elves: &Vec<Loc>) -> usize {
+    let elves = HashSet::from_iter(elves.iter().copied());
     let ((r_min, r_max), (c_min, c_max)) = find_bounds(&elves);
-
-    for row in r_min..=r_max {
-        for col in c_min..=c_max {
-            match elves.contains(&Loc { row, col }) {
-                true => print!("#"),
-                false => print!("."),
-            }
-        }
-        println!();
-    }
-}
-
-fn count_empty(elves: &Vec<Loc>) -> i32 {
-    let elves = HashSet::<Loc>::from_iter(elves.iter().copied());
-    let ((r_min, r_max), (c_min, c_max)) = find_bounds(&elves);
-
-    let mut sum = 0;
-    for row in r_min..=r_max {
-        for col in c_min..=c_max {
-            if !elves.contains(&Loc { row, col }) {
-                sum += 1;
-            }
-        }
-    }
-    sum
+    (r_min..=r_max)
+        .flat_map(|row| (c_min..=c_max).map(move |col| Loc { row, col }))
+        .filter(|loc| !elves.contains(loc))
+        .count()
 }
 
 fn round_iter(data: &HashSet<Loc>) -> Box<dyn Iterator<Item=(bool, Vec<Loc>)>> {
@@ -125,7 +99,7 @@ fn round_iter(data: &HashSet<Loc>) -> Box<dyn Iterator<Item=(bool, Vec<Loc>)>> {
         }))
 }
 
-fn solve1(data: &HashSet<Loc>) -> i32 {
+fn solve1(data: &HashSet<Loc>) -> usize {
     count_empty(&round_iter(data).skip(9).next().unwrap().1)
 }
 
