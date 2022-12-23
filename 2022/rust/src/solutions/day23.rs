@@ -71,11 +71,11 @@ fn count_empty(elves: &Vec<Loc>) -> usize {
         .count()
 }
 
-fn round_iter(data: &HashSet<Loc>) -> Box<dyn Iterator<Item=(bool, Vec<Loc>)>> {
+fn round_iter(data: &HashSet<Loc>) -> impl Iterator<Item=(bool, Vec<Loc>)> {
     let mut elves = Vec::from_iter(data.iter().copied());
     let mut moves = VecDeque::from([move_n, move_s, move_w, move_e]);
 
-    Box::new(std::iter::repeat(()).map(move |_| {
+    std::iter::repeat(()).map(move |_| {
         let occupied = HashSet::from_iter(elves.iter().copied());
         let mut planned = HashMap::<Loc, Vec<usize>>::new();
 
@@ -93,7 +93,7 @@ fn round_iter(data: &HashSet<Loc>) -> Box<dyn Iterator<Item=(bool, Vec<Loc>)>> {
 
         moves.rotate_left(1);
         (changed, elves.clone())
-    }))
+    })
 }
 
 fn solve1(data: &HashSet<Loc>) -> usize {
