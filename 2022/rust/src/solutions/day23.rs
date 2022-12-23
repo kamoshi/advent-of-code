@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use std::collections::{HashMap, HashSet, VecDeque};
 use crate::utils;
 
@@ -96,56 +97,40 @@ fn count_empty(elves: &Vec<Loc>) -> i32 {
     sum
 }
 
-fn solve1(data: &HashSet<Loc>) -> i32 {
+fn round_iter(data: &HashSet<Loc>) -> Box<dyn Iterator<Item=(bool, Vec<Loc>)>> {
     let mut elves = Vec::from_iter(data.iter().copied());
     let mut moves = VecDeque::from([move_n, move_s, move_w, move_e]);
 
-    for _ in 0..10 {
-        let occupied = HashSet::<Loc>::from_iter(elves.iter().copied());
-        let mut planned = HashMap::<Loc, Vec<usize>>::new();
-        for (index, &loc) in elves.iter().enumerate().filter(|&(_, loc)| has_neighbors(&occupied, *loc)) {
-            if let Some(loc) = moves.iter().filter_map(|f| f(&occupied, loc)).next() {
-                planned.entry(loc)
-                    .and_modify(|v| v.push(index))
-                    .or_insert(vec![index]);
+    Box::new(std::iter::repeat(())
+        .map(move |_| {
+            let occupied = HashSet::from_iter(elves.iter().copied());
+            let mut planned = HashMap::<Loc, Vec<usize>>::new();
+
+            for (index, &loc) in elves.iter().enumerate().filter(|&(_, loc)| has_neighbors(&occupied, *loc)) {
+                if let Some(loc) = moves.iter().filter_map(|f| f(&occupied, loc)).next() {
+                    planned.entry(loc)
+                        .and_modify(|v| v.push(index))
+                        .or_insert(vec![index]);
+                }
             }
-        }
 
-        for (loc, planned) in planned.into_iter().filter(|(_, vec)| vec.len() == 1) {
-            elves[planned[0]] = loc;
-        }
+            let mut changed = false;
+            for (loc, planned) in planned.into_iter().filter(|(_, vec)| vec.len() == 1) {
+                elves[planned[0]] = loc;
+                changed = true;
+            }
 
-        moves.rotate_left(1);
-    }
-
-    count_empty(&elves)
+            moves.rotate_left(1);
+            (changed, elves.clone())
+        }))
 }
 
-fn solve2(data: &HashSet<Loc>) -> i32 {
-    let mut elves = Vec::from_iter(data.iter().copied());
-    let mut moves = VecDeque::from([move_n, move_s, move_w, move_e]);
+fn solve1(data: &HashSet<Loc>) -> i32 {
+    count_empty(&round_iter(data).skip(9).next().unwrap().1)
+}
 
-    for round in 1..i32::MAX {
-        let occupied = HashSet::<Loc>::from_iter(elves.iter().copied());
-        let mut planned = HashMap::<Loc, Vec<usize>>::new();
-        for (index, &loc) in elves.iter().enumerate().filter(|&(_, loc)| has_neighbors(&occupied, *loc)) {
-            if let Some(loc) = moves.iter().filter_map(|f| f(&occupied, loc)).next() {
-                planned.entry(loc)
-                    .and_modify(|v| v.push(index))
-                    .or_insert(vec![index]);
-            }
-        }
-
-        let changes = planned.into_iter().filter(|(_, vec)| vec.len() == 1).collect::<Vec<_>>();
-        if changes.len() == 0 { return round }
-
-        for (loc, planned) in changes {
-            elves[planned[0]] = loc;
-        }
-
-        moves.rotate_left(1);
-    };
-    panic!()
+fn solve2(data: &HashSet<Loc>) -> usize {
+    1 + round_iter(data).enumerate().skip_while(|(_, (changed, _))| *changed).next().unwrap().0
 }
 
 
