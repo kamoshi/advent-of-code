@@ -75,28 +75,25 @@ fn round_iter(data: &HashSet<Loc>) -> Box<dyn Iterator<Item=(bool, Vec<Loc>)>> {
     let mut elves = Vec::from_iter(data.iter().copied());
     let mut moves = VecDeque::from([move_n, move_s, move_w, move_e]);
 
-    Box::new(std::iter::repeat(())
-        .map(move |_| {
-            let occupied = HashSet::from_iter(elves.iter().copied());
-            let mut planned = HashMap::<Loc, Vec<usize>>::new();
+    Box::new(std::iter::repeat(()).map(move |_| {
+        let occupied = HashSet::from_iter(elves.iter().copied());
+        let mut planned = HashMap::<Loc, Vec<usize>>::new();
 
-            for (index, &loc) in elves.iter().enumerate().filter(|&(_, loc)| has_neighbors(&occupied, *loc)) {
-                if let Some(loc) = moves.iter().filter_map(|f| f(&occupied, loc)).next() {
-                    planned.entry(loc)
-                        .and_modify(|v| v.push(index))
-                        .or_insert(vec![index]);
-                }
+        for (index, &loc) in elves.iter().enumerate().filter(|&(_, loc)| has_neighbors(&occupied, *loc)) {
+            if let Some(loc) = moves.iter().filter_map(|f| f(&occupied, loc)).next() {
+                planned.entry(loc).and_modify(|v| v.push(index)).or_insert(vec![index]);
             }
+        }
 
-            let mut changed = false;
-            for (loc, planned) in planned.into_iter().filter(|(_, vec)| vec.len() == 1) {
-                elves[planned[0]] = loc;
-                changed = true;
-            }
+        let mut changed = false;
+        for (loc, planned) in planned.into_iter().filter(|(_, vec)| vec.len() == 1) {
+            elves[planned[0]] = loc;
+            changed = true;
+        }
 
-            moves.rotate_left(1);
-            (changed, elves.clone())
-        }))
+        moves.rotate_left(1);
+        (changed, elves.clone())
+    }))
 }
 
 fn solve1(data: &HashSet<Loc>) -> usize {
