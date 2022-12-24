@@ -67,7 +67,6 @@ fn manhattan(start: Pos, goal: Pos) -> isize {
 
 fn a_star(start: Pos, goal: Pos, dims: (isize, isize), blizzards: &[Blizzard], offset: isize) -> Option<isize> {
     let mut frontier: BinaryHeap<State> = BinaryHeap::new();
-    let mut parent: HashMap<(isize, Pos), (isize, Pos)> = HashMap::new();
     let mut cost: HashMap<(isize, Pos), isize> = HashMap::from([((offset, start), 0)]);
 
     frontier.push(State { cost: 0, position: (offset, start) });
@@ -75,12 +74,10 @@ fn a_star(start: Pos, goal: Pos, dims: (isize, isize), blizzards: &[Blizzard], o
         if cur_pos == goal { return Some(cur_t) };
         let next_t = cur_t + 1;
         let blizzards = offset_blizzards(blizzards, dims, next_t);
-
         for neighbour in neighbours(cur_pos, dims).filter(|p| !blizzards.contains(p)) {
             let new_cost = cost.get(&(cur_t, cur_pos)).unwrap() + 1;
             if !cost.contains_key(&(next_t, neighbour)) || new_cost < cost[&(next_t, neighbour)] {
                 cost.insert((next_t, neighbour), new_cost);
-                parent.insert((next_t, neighbour), (cur_t, cur_pos));
                 frontier.push(State {
                     cost: new_cost + manhattan(neighbour, goal),
                     position: (next_t, neighbour),
