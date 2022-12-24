@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashMap, HashSet};
 use crate::utils;
@@ -25,7 +26,6 @@ struct Blizzard {
     pos: Pos,
 }
 
-
 fn offset_blizzards(blizzards: &[Blizzard], (rows, cols): (isize, isize), offset: isize) -> HashSet<Pos> {
     blizzards.iter()
         .map(|&Blizzard { dir, pos: (row, col) }| match dir {
@@ -36,7 +36,6 @@ fn offset_blizzards(blizzards: &[Blizzard], (rows, cols): (isize, isize), offset
         })
         .collect()
 }
-
 
 #[derive(Copy, Clone, Eq, PartialEq)]
 struct State {
@@ -57,20 +56,21 @@ impl PartialOrd for State {
 }
 
 fn neighbours((row, col): Pos, (rows, cols): (isize, isize)) -> impl Iterator<Item=Pos> {
-    [(row, col), (row+1, col), (row-1, col), (row, col+1), (row, col-1)].into_iter().filter(move |&(n_row, n_col)|
-        0 <= n_row && (n_row < rows || n_col == cols - 1) && 0 <= n_col && n_col < cols)
+    [(row, col), (row+1, col), (row-1, col), (row, col+1), (row, col-1)].into_iter()
+        .filter(move |&(n_row, n_col)|
+            (0 <= n_row || n_col == 0) && (n_row < rows || n_col == cols - 1) && 0 <= n_col && n_col < cols)
 }
 
 fn manhattan(start: Pos, goal: Pos) -> isize {
     (start.0.abs_diff(goal.0) + start.1.abs_diff(goal.1)) as isize
 }
 
-fn a_star(start: Pos, goal: Pos, dims: (isize, isize), blizzards: &[Blizzard]) -> Option<isize> {
+fn a_star(start: Pos, goal: Pos, dims: (isize, isize), blizzards: &[Blizzard], offset: isize) -> Option<isize> {
     let mut frontier: BinaryHeap<State> = BinaryHeap::new();
     let mut parent: HashMap<(isize, Pos), (isize, Pos)> = HashMap::new();
-    let mut cost: HashMap<(isize, Pos), isize> = HashMap::from([((0, start), 0)]);
+    let mut cost: HashMap<(isize, Pos), isize> = HashMap::from([((offset, start), 0)]);
 
-    frontier.push(State { cost: 0, position: (0, start) });
+    frontier.push(State { cost: 0, position: (offset, start) });
     while let Some(State { position: (cur_t, cur_pos), .. }) = frontier.pop() {
         if cur_pos == goal { return Some(cur_t) };
         let next_t = cur_t + 1;
@@ -93,11 +93,14 @@ fn a_star(start: Pos, goal: Pos, dims: (isize, isize), blizzards: &[Blizzard]) -
 
 fn solve1((dims, blizzards): &((isize, isize), Vec<Blizzard>)) -> isize {
     let (start, goal) = ((-1_isize, 0_isize), (dims.0, dims.1 - 1));
-    a_star(start, goal, *dims, blizzards).unwrap()
+    a_star(start, goal, *dims, blizzards, 0).unwrap()
 }
 
-fn solve2(data: &((isize, isize), Vec<Blizzard>)) -> i32 {
-    2
+fn solve2((dims, blizzards): &((isize, isize), Vec<Blizzard>)) -> isize {
+    let (start, goal) = ((-1_isize, 0_isize), (dims.0, dims.1 - 1));
+    let offset = a_star(start, goal, *dims, blizzards, 0).unwrap();
+    let offset = a_star(goal, start, *dims, blizzards, offset).unwrap();
+    a_star(start, goal, *dims, blizzards, offset).unwrap()
 }
 
 
@@ -139,13 +142,11 @@ mod tests {
 
     #[test]
     fn part1() {
-        let data = parse_data(DATA);
-        assert_eq!(18, solve1(&data));
+        assert_eq!(18, solve1(&parse_data(DATA)));
     }
 
     #[test]
     fn part2() {
-        let data = parse_data(DATA);
-        assert_eq!(2, solve2(&data));
+        assert_eq!(54, solve2(&parse_data(DATA)));
     }
 }
