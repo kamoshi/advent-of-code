@@ -57,8 +57,8 @@ impl PartialOrd for State {
 
 fn neighbours((row, col): Pos, (rows, cols): (isize, isize)) -> impl Iterator<Item=Pos> {
     [(row, col), (row+1, col), (row-1, col), (row, col+1), (row, col-1)].into_iter()
-        .filter(move |&(n_row, n_col)|
-            (0 <= n_row || n_col == 0) && (n_row < rows || n_col == cols - 1) && 0 <= n_col && n_col < cols)
+        .filter(move |&new|
+            0 <= new.0 && new.0 < rows && 0 <= new.1 && new.1 < cols || new == (-1, 0) || new == (rows, cols-1))
 }
 
 fn manhattan(start: Pos, goal: Pos) -> isize {
