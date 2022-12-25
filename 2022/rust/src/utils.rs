@@ -13,7 +13,7 @@ pub fn read_lines(source: Source) -> Vec<String> {
     let path = match source {
         Source::Scratch => "inputs/scratch.txt".to_string(),
         Source::Day(day) => {
-            assert!(1 <= day && day < 25);
+            assert!(1 <= day && day <= 25);
             format!("inputs/day{:0>2}.txt", day)
         }
     };
