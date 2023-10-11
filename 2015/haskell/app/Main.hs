@@ -2,7 +2,7 @@ module Main where
 
 import Text.Printf (printf)
 import qualified Day01
-
+import qualified Day03
 
 readDay :: Int -> IO String
 readDay n = readFile $ getPath n
@@ -12,7 +12,7 @@ readDay n = readFile $ getPath n
 
 main :: IO ()
 main = do
-  content <- readDay 1
-  let parsed = Day01.parse content
-  print $ Day01.solve1 parsed
-  print $ Day01.solve2 parsed
+  content <- readDay 3
+  let parsed = Day03.parse content
+  print $ Day03.solve1 parsed
+  print $ Day03.solve2 parsed

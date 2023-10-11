@@ -19,7 +19,9 @@ maintainer:         maciej@kamoshi.org
 extra-source-files: CHANGELOG.md
 
 library
-    exposed-modules:  Day01
+    exposed-modules:
+      Day01
+      Day03
 
     -- Modules included in this library but not exported.
     -- other-modules:
