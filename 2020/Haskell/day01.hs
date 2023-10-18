@@ -14,18 +14,15 @@ example =
   , 1456
   ]
 
-scout :: Int -> [[Integer]] -> Maybe [[Integer]]
-scout _ []    = Nothing
-scout 0 _     = Just []
-scout 1 (h:_) = Just $ map (:[]) h
-scout n (h:t) = do
-  a <- map (head h:) <$> scout (n-1) t
-  let b = fromMaybe [] $ scout n t
-  pure $ a <> b
+scout :: Int -> [[a]] -> [[a]]
+scout _ []    = []
+scout 0 _     = []
+scout 1 (h:_) = map (:[]) h
+scout n (h:t) = map (head h:) (scout (n-1) t) <> scout n t
 
 
 solve :: Int -> [Integer] -> Integer
-solve n = product . head . filter ((2020==) . sum) . fromMaybe [] . scout n . tails
+solve n = product . head . filter ((2020==) . sum) . scout n . tails
 
 solve1 :: [Integer] -> Integer
 solve1 = solve 2
