@@ -1,8 +1,12 @@
 module Main where
 
-import qualified Day01 (someFunc)
+import qualified Data.Text as T
+import Utils (readInput)
+
+import qualified Day01
+import qualified Day02
 
 main :: IO ()
 main = do
-  putStrLn "Hello, Haskell!"
-  MyLib.someFunc
+  text <- readInput 1
+  putStrLn $ T.unpack text

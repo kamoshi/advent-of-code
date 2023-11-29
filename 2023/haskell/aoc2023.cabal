@@ -85,7 +85,8 @@ executable aoc2023
     main-is:          Main.hs
 
     -- Modules included in this executable, other than Main.
-    -- other-modules:
+    other-modules:
+        Utils
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
@@ -93,6 +94,7 @@ executable aoc2023
     -- Other library packages from which modules are imported.
     build-depends:
         base ^>=4.17.2.0,
+        text ^>=2.1,
         aoc2023
 
     -- Directories containing source files.
