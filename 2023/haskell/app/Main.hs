@@ -2,10 +2,24 @@ module Main where
 
 import Utils (readInput)
 import qualified Day01
+import qualified Day02
+import Debug.Trace (traceShowId)
 
+
+day01 :: IO ()
+day01 = do
+  input <- Day01.parse <$> readInput 1
+  print . Day01.solveA $ input
+  print . Day01.solveB $ input
+
+day02 :: IO ()
+day02 = do
+  text <- readInput 2
+  case Day02.parse text of
+    Left err -> putStrLn err
+    Right xd -> print . Day02.solveA . traceShowId $ xd
 
 main :: IO ()
 main = do
-  text <- readInput 1
-  print . Day01.solveA . Day01.parse $ text
-  print . Day01.solveB . Day01.parse $ text
+  --day01
+  day02
