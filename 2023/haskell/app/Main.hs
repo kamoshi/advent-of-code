@@ -3,7 +3,6 @@ module Main where
 import Utils (readInput)
 import qualified Day01
 import qualified Day02
-import Debug.Trace (traceShowId)
 
 
 day01 :: IO ()
@@ -17,7 +16,9 @@ day02 = do
   text <- readInput 2
   case Day02.parse text of
     Left err -> putStrLn err
-    Right xd -> print . Day02.solveA . traceShowId $ xd
+    Right xd -> do
+      print . Day02.solveA $ xd
+      print . Day02.solveB $ xd
 
 main :: IO ()
 main = do

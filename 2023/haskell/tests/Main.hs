@@ -18,10 +18,11 @@ day01 = TestList
 
 day02 :: Test
 day02 = TestList
-  [ TestCase $ assertEqual "should return 8" 8 (Day02.solveA inputA)
+  [ TestCase $ assertEqual "should return 8" 8 (Day02.solveA input)
+  , TestCase $ assertEqual "should return 2286" 2286 (Day02.solveB input)
   ]
   where
-    inputA =
+    input =
       [ Day02.Game 1 [[Day02.B 3, Day02.R 4], [Day02.R 1, Day02.G 2, Day02.B 6], [Day02.G 2]]
       , Day02.Game 2 [[Day02.B 1, Day02.G 2], [Day02.G 3, Day02.B 4, Day02.R 1], [Day02.G 1, Day02.B 1]]
       , Day02.Game 3 [[Day02.G 8, Day02.B 6, Day02.R 20], [Day02.B 5, Day02.R 4, Day02.G 13], [Day02.G 5, Day02.R 1]]
