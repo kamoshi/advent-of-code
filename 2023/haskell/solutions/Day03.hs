@@ -5,9 +5,9 @@ import Data.Bifunctor (first, second)
 import Data.Void (Void)
 import Data.Char (digitToInt, isSpace)
 import Data.Text (Text)
+import Data.Maybe (mapMaybe)
 import Text.Megaparsec (errorBundlePretty, Parsec, runParser, many, eof, choice, satisfy, manyTill)
 import Text.Megaparsec.Char (digitChar, char)
-import Data.Maybe (mapMaybe)
 
 
 data Item
@@ -51,12 +51,12 @@ findSpans = helper []
 withCoords :: [[a]] -> [((Row, Col), a)]
 withCoords grid = [((r, c), a) | (r, row) <- zip [0..] grid, (c, a) <- zip [0..] row]
 
-getSymbols :: Grid -> [(Row, Col)]
+getSymbols :: Grid -> [(Char, (Row, Col))]
 getSymbols = mapMaybe isSymbol . withCoords
   where
-    isSymbol :: ((Row, Col), Item) -> Maybe (Row, Col)
+    isSymbol :: ((Row, Col), Item) -> Maybe (Char, (Row, Col))
     isSymbol (rc, item) = case item of
-      Symbol _ -> Just rc
+      Symbol s -> Just (s, rc)
       _        -> Nothing
 
 getNumbers :: Grid -> [(Int, (Row, Col, Col))]
@@ -82,15 +82,21 @@ getNeigbors (r, s, e) = [(r, s-1), (r, e+1)]
   <> [(r-1, c) | c <- [s-1..e+1]]
   <> [(r+1, c) | c <- [s-1..e+1]]
 
-solveA :: [[Item]] -> Int
+solveA :: Grid -> Int
 solveA grid =
-  let symbols = getSymbols grid
+  let symbols = map snd $ getSymbols grid
       numbers = getNumbers grid
-  in sum . map fst . filter (hasSymbol symbols . snd) . map (second getNeigbors) $ numbers
+  in sum . map fst . filter (hasSymbol symbols . getNeigbors . snd) $ numbers
   where
     hasSymbol :: [(Row, Col)] -> [(Row, Col)] -> Bool
     hasSymbol symbols = any (`elem` symbols)
 
-solveB :: [[Item]] -> Int
-solveB = undefined
+solveB :: Grid -> Int
+solveB grid =
+  let symbols = map snd . filter (('*'==) . fst) $ getSymbols grid
+      numbers = map (second getNeigbors) $ getNumbers grid
+  in sum . map product . filter ((2==) . length) . map (findNumbers numbers) $ symbols
+  where
+    findNumbers :: [(Int, [(Row, Col)])] -> (Row, Col) -> [Int]
+    findNumbers ns symbol = map fst . filter ((symbol `elem`) . snd) $ ns
 

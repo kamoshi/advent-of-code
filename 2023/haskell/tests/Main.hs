@@ -32,8 +32,11 @@ day02 = TestList
       ]
 
 day03 :: Test
-day03 = TestList
-  [ TestCase $ assertEqual "A" (Right 4361) (Day03.solveA <$> Day03.parse input)
+day03 =
+  let parsed = Day03.parse input
+  in TestList
+  [ TestCase $ assertEqual "A" (Right 4361)   (Day03.solveA <$> parsed)
+  , TestCase $ assertEqual "B" (Right 467835) (Day03.solveB <$> parsed)
   ]
   where
     input =

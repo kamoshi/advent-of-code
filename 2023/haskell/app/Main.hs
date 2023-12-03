@@ -28,7 +28,7 @@ day03 = do
     Left err -> putStrLn err
     Right xd -> do
       print . Day03.solveA $ xd
-      --print . Day02.solveB $ xd
+      print . Day03.solveB $ xd
 
 main :: IO ()
 main = do
