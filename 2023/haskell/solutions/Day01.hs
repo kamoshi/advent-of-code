@@ -40,7 +40,6 @@ solveB = sum . map (merge . convert)
     tryReplace text (prefix, n)
       | prefix `T.isPrefixOf` text = Just n
       | otherwise = Nothing
-
     -- If `firstChar` is a digit return it, otherwise try replace the prefix
     parsePrefix :: Text -> Maybe Int
     parsePrefix text
@@ -48,6 +47,5 @@ solveB = sum . map (merge . convert)
       | otherwise = listToMaybe $ mapMaybe (tryReplace text) replaces
       where
         firstChar = T.head text
-
     convert :: Text -> [Int]
     convert = mapMaybe parsePrefix . filter (not . T.null) . T.tails
