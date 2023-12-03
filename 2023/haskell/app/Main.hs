@@ -27,12 +27,12 @@ day03 = do
   case Day03.parse text of
     Left err -> putStrLn err
     Right xd -> do
-      --print . Day02.solveA $ xd
+      print . Day03.solveA $ xd
       --print . Day02.solveB $ xd
-      print xd
 
 main :: IO ()
 main = do
   -- day01
   -- day02
   day03
+  pure ()
