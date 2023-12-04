@@ -4,6 +4,7 @@ import Utils (readInput)
 import qualified Day01
 import qualified Day02
 import qualified Day03
+import qualified Day04
 
 
 day01 :: IO ()
@@ -30,9 +31,19 @@ day03 = do
       print . Day03.solveA $ xd
       print . Day03.solveB $ xd
 
+day04 :: IO ()
+day04 = do
+  text <- readInput 4
+  case Day04.parse text of
+    Left err -> putStrLn err
+    Right xd -> do
+      print . Day04.solveA $ xd
+      print . Day04.solveB $ xd
+
 main :: IO ()
 main = do
   -- day01
   -- day02
-  day03
+  -- day03
+  day04
   pure ()
