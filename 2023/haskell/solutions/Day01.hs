@@ -7,8 +7,8 @@ import Data.Char (isDigit)
 import Data.Maybe (mapMaybe, listToMaybe)
 
 
-parse :: Text -> [Text]
-parse = T.lines
+parse :: Text -> Either String [Text]
+parse = Right . T.lines
 
 merge :: [Int] -> Int
 merge xs = 10 * head xs + last xs

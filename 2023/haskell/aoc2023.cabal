@@ -23,7 +23,6 @@ library
     Day03
     Day04
 
-  -- Modules included in this library but not exported.
   -- other-modules:
 
   -- LANGUAGE extensions used by modules in this package.
