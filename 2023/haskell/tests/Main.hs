@@ -1,36 +1,52 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main (main) where
 
-import Test.HUnit
+import Test.HUnit (Test(..), assertEqual, runTestTT, failures)
 import qualified System.Exit as Exit
 import qualified Day01
 import qualified Day02
 import qualified Day03
 import qualified Day04
+import qualified Day05
 
 
 day01 :: Test
-day01 = TestList
-  [ TestCase $ assertEqual "A" 142 (Day01.solveA inputA)
-  , TestCase $ assertEqual "B" 281 (Day01.solveB inputB)
-  ]
+day01 =
+  let parsedA = Day01.parse inputA
+      parsedB = Day01.parse inputB
+  in TestList
+    [ TestCase $ assertEqual "A" (Right 142) (Day01.solveA <$> parsedA)
+    , TestCase $ assertEqual "B" (Right 281) (Day01.solveB <$> parsedB)
+    ]
   where
-    inputA = ["1abc2", "pqr3stu8vwx", "a1b2c3d4e5f", "treb7uchet"]
-    inputB = ["two1nine", "eightwothree", "abcone2threexyz", "xtwone3four", "4nineeightseven2", "zoneight234", "7pqrstsixteen"]
+    inputA =
+      "1abc2\n\
+      \pqr3stu8vwx\n\
+      \a1b2c3d4e5f\n\
+      \treb7uchet\n"
+    inputB =
+      "two1nine\n\
+      \eightwothree\n\
+      \abcone2threexyz\n\
+      \xtwone3four\n\
+      \4nineeightseven2\n\
+      \zoneight234\n\
+      \7pqrstsixteen\n"
 
 day02 :: Test
-day02 = TestList
-  [ TestCase $ assertEqual "A" 8    (Day02.solveA input)
-  , TestCase $ assertEqual "B" 2286 (Day02.solveB input)
-  ]
+day02 =
+  let parsed = Day02.parse input
+  in TestList
+    [ TestCase $ assertEqual "A" (Right 8)    (Day02.solveA <$> parsed)
+    , TestCase $ assertEqual "B" (Right 2286) (Day02.solveB <$> parsed)
+    ]
   where
     input =
-      [ Day02.Game 1 [[Day02.B 3, Day02.R 4], [Day02.R 1, Day02.G 2, Day02.B 6], [Day02.G 2]]
-      , Day02.Game 2 [[Day02.B 1, Day02.G 2], [Day02.G 3, Day02.B 4, Day02.R 1], [Day02.G 1, Day02.B 1]]
-      , Day02.Game 3 [[Day02.G 8, Day02.B 6, Day02.R 20], [Day02.B 5, Day02.R 4, Day02.G 13], [Day02.G 5, Day02.R 1]]
-      , Day02.Game 4 [[Day02.G 1, Day02.R 3, Day02.B 6], [Day02.G 3, Day02.R 6], [Day02.G 3, Day02.B 15, Day02.R 14]]
-      , Day02.Game 5 [[Day02.R 6, Day02.B 1, Day02.G 3], [Day02.B 2, Day02.R 1, Day02.G 2]]
-      ]
+      "Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green\n\
+      \Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue\n\
+      \Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red\n\
+      \Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red\n\
+      \Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green\n"
 
 day03 :: Test
 day03 =
@@ -68,12 +84,56 @@ day04 =
       \Card 5: 87 83 26 28 32 | 88 30 70 12 93 22 82 36\n\
       \Card 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11\n"
 
+day05 :: Test
+day05 =
+  let parsed = Day05.parse input
+  in TestList
+    [ TestCase $ assertEqual "A" (Right 35) (Day05.solveA <$> parsed)
+    , TestCase $ assertEqual "B" (Right 46) (Day05.solveB <$> parsed)
+    ]
+  where
+    input =
+      "seeds: 79 14 55 13\n\
+      \\n\
+      \seed-to-soil map:\n\
+      \50 98 2\n\
+      \52 50 48\n\
+      \\n\
+      \soil-to-fertilizer map:\n\
+      \0 15 37\n\
+      \37 52 2\n\
+      \39 0 15\n\
+      \\n\
+      \fertilizer-to-water map:\n\
+      \49 53 8\n\
+      \0 11 42\n\
+      \42 0 7\n\
+      \57 7 4\n\
+      \\n\
+      \water-to-light map:\n\
+      \88 18 7\n\
+      \18 25 70\n\
+      \\n\
+      \light-to-temperature map:\n\
+      \45 77 23\n\
+      \81 45 19\n\
+      \68 64 13\n\
+      \\n\
+      \temperature-to-humidity map:\n\
+      \0 69 1\n\
+      \1 0 69\n\
+      \\n\
+      \humidity-to-location map:\n\
+      \60 56 37\n\
+      \56 93 4\n"
+
 tests :: Test
 tests = TestList
   [ TestLabel "day01" day01
   , TestLabel "day02" day02
   , TestLabel "day03" day03
   , TestLabel "day04" day04
+  , TestLabel "day05" day05
   ]
 
 main :: IO ()
