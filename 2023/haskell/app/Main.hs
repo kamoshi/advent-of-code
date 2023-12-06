@@ -6,7 +6,8 @@ import Utils (readInput)
 --import qualified Day02
 --import qualified Day03
 --import qualified Day04
-import qualified Day05
+--import qualified Day05
+import qualified Day06
 
 
 run :: (Show b, Show c)
@@ -30,5 +31,6 @@ main = do
   --run 2 Day02.parse Day02.solveA Day02.solveB
   --run 3 Day03.parse Day03.solveA Day03.solveB
   --run 4 Day04.parse Day04.solveA Day04.solveB
-  run 5 Day05.parse Day05.solveA Day05.solveB
+  --run 5 Day05.parse Day05.solveA Day05.solveB
+  run 6 Day06.parse Day06.solveA Day06.solveB
   pure ()

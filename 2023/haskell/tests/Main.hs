@@ -8,6 +8,7 @@ import qualified Day02
 import qualified Day03
 import qualified Day04
 import qualified Day05
+import qualified Day06
 
 
 day01 :: Test
@@ -127,6 +128,18 @@ day05 =
       \60 56 37\n\
       \56 93 4\n"
 
+day06 :: Test
+day06 =
+  let parsed = Day06.parse input
+  in TestList
+      [ TestCase $ assertEqual "A" (Right 288)   (Day06.solveA <$> parsed)
+      , TestCase $ assertEqual "B" (Right 71503) (Day06.solveB <$> parsed)
+    ]
+  where
+    input =
+      "Time:      7  15   30\n\
+      \Distance:  9  40  200\n"
+
 tests :: Test
 tests = TestList
   [ TestLabel "day01" day01
@@ -134,6 +147,7 @@ tests = TestList
   , TestLabel "day03" day03
   , TestLabel "day04" day04
   , TestLabel "day05" day05
+  , TestLabel "day06" day06
   ]
 
 main :: IO ()
