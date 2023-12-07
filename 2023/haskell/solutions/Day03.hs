@@ -37,16 +37,15 @@ parse = first errorBundlePretty . runParser full ""
     full :: Parser [[Item]]
     full = many line <* eof
 
-findSpans :: (a -> a -> Bool) -> [a] -> [[a]]
-findSpans = helper []
+spansBy :: (a -> a -> Bool) -> [a] -> [[a]]
+spansBy p = helper []
   where
-    helper :: [[a]] -> (a -> a -> Bool) -> [a] -> [[a]]
-    helper acc        _ []     = reverse . map reverse $ acc
-    helper []         p (x:xs) = helper [[x]] p xs
-    helper acc@(a:as) p (x:xs) =
+    helper acc        []     = reverse . map reverse $ acc
+    helper []         (x:xs) = helper [[x]] xs
+    helper acc@(a:as) (x:xs) =
       if p (head a) x
-      then helper ((x:a):as) p xs
-      else helper ([x]:acc)  p xs
+      then helper ((x:a):as) xs
+      else helper ([x]:acc)  xs
 
 withCoords :: [[a]] -> [((Row, Col), a)]
 withCoords grid = [((r, c), a) | (r, row) <- zip [0..] grid, (c, a) <- zip [0..] row]
@@ -75,7 +74,7 @@ getNumbers = concat . zipWith processRow [0..]
           e = maximum $ map fst items
       in (n, (r, s, e))
     processRow :: Row -> [Item] -> [(Int, (Row, Col, Col))]
-    processRow r = map (merge r) . findSpans isNext . mapMaybe getDigit . zip [0..]
+    processRow r = map (merge r) . spansBy isNext . mapMaybe getDigit . zip [0..]
 
 getNeigbors :: (Row, Col, Col) -> [(Row, Col)]
 getNeigbors (r, s, e) = [(r, s-1), (r, e+1)]

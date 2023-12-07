@@ -6,11 +6,11 @@ import Data.Char (isDigit, digitToInt)
 import Data.Text (Text)
 import Data.List (sort, find, sortBy)
 import Data.Function (on)
-import Data.Bifunctor (first, Bifunctor (bimap))
+import Data.Bifunctor (first, bimap, second)
+import Control.Monad (join)
 import Text.Megaparsec (Parsec, errorBundlePretty, runParser, many, eof)
 import Text.Megaparsec.Char (alphaNumChar, space)
 import Text.Megaparsec.Char.Lexer (decimal)
-import Control.Monad (join)
 
 
 data Card = X | Plain Int | T | J | Q | K | A
@@ -30,8 +30,8 @@ parse = first errorBundlePretty . runParser plays ""
   where
     card :: Char -> Card
     card c
-      | isDigit c = Plain $ digitToInt c
-      | otherwise = read $ pure c
+      | isDigit c = Plain . digitToInt $ c
+      | otherwise = read . pure $ c
     play :: Parser Play
     play = do
       cs  <- map card <$> many alphaNumChar
@@ -43,48 +43,43 @@ parse = first errorBundlePretty . runParser plays ""
     plays = many play <* eof
 
 spansBy :: (a -> a -> Bool) -> [a] -> [[a]]
-spansBy = helper []
+spansBy p = helper []
   where
-    helper :: [[a]] -> (a -> a -> Bool) -> [a] -> [[a]]
-    helper acc        _ []     = reverse . map reverse $ acc
-    helper []         p (x:xs) = helper [[x]] p xs
-    helper acc@(a:as) p (x:xs) =
+    helper acc        []     = reverse . map reverse $ acc
+    helper []         (x:xs) = helper [[x]] xs
+    helper acc@(a:as) (x:xs) =
       if p (head a) x
-      then helper ((x:a):as) p xs
-      else helper ([x]:acc)  p xs
+      then helper ((x:a):as) xs
+      else helper ([x]:acc)  xs
 
 group :: Hand -> [[Card]]
 group = spansBy (==) . sort
 
 classify :: Hand -> HandType
-classify cs
-    | has [5]    = Five
-    | has [4]    = Four
-    | has [3, 2] = Full
-    | has [3]    = Three
-    | count 2 2  = TwoPair
-    | has [2]    = OnePair
-    | otherwise  = High
-    where
-      sizes :: [Int]
-      sizes = map length . group $ cs
-      has :: [Int] -> Bool
-      has   = all (`elem` sizes)
-      count :: Int -> Int -> Bool
-      count n = (==) . length . filter (n==) $ sizes
+classify = cast . sortBy (flip compare) . map length . group
+  where
+    cast :: [Int] -> HandType
+    cast ns = case ns of
+      5:_   -> Five
+      4:_   -> Four
+      3:2:_ -> Full
+      3:_   -> Three
+      2:2:_ -> TwoPair
+      2:_   -> OnePair
+      _     -> High
 
-withType :: Play -> (HandType, Play)
-withType = first (classify . fst) . join (,)
+withType :: (Hand -> HandType) -> Play -> (HandType, Play)
+withType toType = first (toType . fst) . join (,)
 
 score :: Int -> Play -> Int
 score = flip $ (*) . snd
 
 solveA :: [Play] -> Int
-solveA = sum . zipWith score [1..] . map snd . sort . map withType
+solveA = sum . zipWith score [1..] . map snd . sort . map (withType classify)
 
-classify' :: [Card] -> HandType
+classify' :: Hand -> HandType
 classify' cs =
-  let counts = map (bimap length head . join (,)) . spansBy (==) . sort $ cs
+  let counts = map (bimap length head . join (,)) . group $ cs
       jokers = maybe 0 fst . find ((J ==) . snd) $ counts
       others = sortBy (flip compare `on` fst) . filter ((J /=) . snd) $ counts
   in case others of
@@ -99,8 +94,5 @@ erase e = helper
       | e == c    = X : helper cs
       | otherwise = c : helper cs
 
-withType' :: Play -> (HandType, Play)
-withType' = bimap (classify' . fst) (first (erase J)) . join (,)
-
 solveB :: [Play] -> Int
-solveB = sum . zipWith score [1..] . map snd . sort . map withType'
+solveB = sum . zipWith score [1..] . map snd . sort . map (second (first $ erase J) . withType classify')
