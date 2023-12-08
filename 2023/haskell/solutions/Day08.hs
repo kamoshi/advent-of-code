@@ -3,6 +3,7 @@ module Day08 (parse, solveA, solveB) where
 
 import Data.Void (Void)
 import Data.Text (Text)
+import Data.List (transpose)
 import Data.Bifunctor (first)
 import Text.Megaparsec (Parsec, errorBundlePretty, runParser, many, eof)
 import Text.Megaparsec.Char (alphaNumChar, space, char)
@@ -42,20 +43,6 @@ parse = first errorBundlePretty . runParser input ""
       eof
       return (path, ns)
 
-
-input :: Text
-input =
-  "RL\n\
-  \\n\
-  \AAA = (BBB, CCC)\n\
-  \BBB = (DDD, EEE)\n\
-  \CCC = (ZZZ, GGG)\n\
-  \DDD = (DDD, DDD)\n\
-  \EEE = (EEE, EEE)\n\
-  \GGG = (GGG, GGG)\n\
-  \ZZZ = (ZZZ, ZZZ)\n"
-
-
 run :: [Node] -> String -> [Dir] -> [(Int, String)]
 run ns start = helper 0 start . cycle
   where
@@ -72,8 +59,9 @@ solveA :: Input -> Int
 solveA (ds, ns) = fst . head . filter (("ZZZ" ==) . snd) $ run ns "AAA" ds
 
 solveB :: Input -> Int
-solveB = const 1
-
--- >>> solveA <$> parse input
--- Right 2
-
+solveB (ds, ns) = frequency . head . transpose . map (filter (('Z' ==) . last . snd)) $ toParallel ns
+  where
+    toParallel :: [Node] -> [[(Int, String)]]
+    toParallel = map (($ ds) . run ns) . filter (('A' ==) . last) . map fst
+    frequency :: [(Int, String)] -> Int
+    frequency = foldl lcm 1 . map fst

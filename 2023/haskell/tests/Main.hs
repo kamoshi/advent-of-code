@@ -10,6 +10,7 @@ import qualified Day04
 import qualified Day05
 import qualified Day06
 import qualified Day07
+import qualified Day08
 
 
 day01 :: Test
@@ -54,9 +55,9 @@ day03 :: Test
 day03 =
   let parsed = Day03.parse input
   in TestList
-  [ TestCase $ assertEqual "A" (Right 4361)   (Day03.solveA <$> parsed)
-  , TestCase $ assertEqual "B" (Right 467835) (Day03.solveB <$> parsed)
-  ]
+    [ TestCase $ assertEqual "A" (Right 4361)   (Day03.solveA <$> parsed)
+    , TestCase $ assertEqual "B" (Right 467835) (Day03.solveB <$> parsed)
+    ]
   where
     input =
       "467..114..\n\
@@ -133,8 +134,8 @@ day06 :: Test
 day06 =
   let parsed = Day06.parse input
   in TestList
-      [ TestCase $ assertEqual "A" (Right 288)   (Day06.solveA <$> parsed)
-      , TestCase $ assertEqual "B" (Right 71503) (Day06.solveB <$> parsed)
+    [ TestCase $ assertEqual "A" (Right 288)   (Day06.solveA <$> parsed)
+    , TestCase $ assertEqual "B" (Right 71503) (Day06.solveB <$> parsed)
     ]
   where
     input =
@@ -156,6 +157,45 @@ day07 =
       \KTJJT 220\n\
       \QQQJA 483\n"
 
+day08 :: Test
+day08 =
+  let parsedA1 = Day08.parse inputA1
+      parsedA2 = Day08.parse inputA2
+      parsedB  = Day08.parse inputB
+  in TestList
+    [ TestCase $ assertEqual "A" (Right 2) (Day08.solveA <$> parsedA1)
+    , TestCase $ assertEqual "A" (Right 6) (Day08.solveA <$> parsedA2)
+    , TestCase $ assertEqual "B" (Right 6) (Day08.solveB <$> parsedB)
+    ]
+  where
+    inputA1 =
+      "RL\n\
+      \\n\
+      \AAA = (BBB, CCC)\n\
+      \BBB = (DDD, EEE)\n\
+      \CCC = (ZZZ, GGG)\n\
+      \DDD = (DDD, DDD)\n\
+      \EEE = (EEE, EEE)\n\
+      \GGG = (GGG, GGG)\n\
+      \ZZZ = (ZZZ, ZZZ)\n"
+    inputA2 =
+      "LLR\n\
+      \\n\
+      \AAA = (BBB, BBB)\n\
+      \BBB = (AAA, ZZZ)\n\
+      \ZZZ = (ZZZ, ZZZ)\n"
+    inputB =
+      "LR\n\
+      \\n\
+      \11A = (11B, XXX)\n\
+      \11B = (XXX, 11Z)\n\
+      \11Z = (11B, XXX)\n\
+      \22A = (22B, XXX)\n\
+      \22B = (22C, 22C)\n\
+      \22C = (22Z, 22Z)\n\
+      \22Z = (22B, 22B)\n\
+      \XXX = (XXX, XXX)\n"
+
 tests :: Test
 tests = TestList
   [ TestLabel "day01" day01
@@ -165,6 +205,7 @@ tests = TestList
   , TestLabel "day05" day05
   , TestLabel "day06" day06
   , TestLabel "day07" day07
+  , TestLabel "day08" day08
   ]
 
 main :: IO ()
