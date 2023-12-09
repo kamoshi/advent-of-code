@@ -11,6 +11,7 @@ import qualified Day05
 import qualified Day06
 import qualified Day07
 import qualified Day08
+import qualified Day09
 
 
 day01 :: Test
@@ -196,6 +197,19 @@ day08 =
       \22Z = (22B, 22B)\n\
       \XXX = (XXX, XXX)\n"
 
+day09 :: Test
+day09 =
+  let parsed = Day09.parse input
+  in TestList
+    [ TestCase $ assertEqual "A" (Right 114) (Day09.solveA <$> parsed)
+    , TestCase $ assertEqual "B" (Right 2)   (Day09.solveB <$> parsed)
+    ]
+  where
+    input =
+      "0 3 6 9 12 15\n\
+      \1 3 6 10 15 21\n\
+      \10 13 16 21 30 45\n"
+
 tests :: Test
 tests = TestList
   [ TestLabel "day01" day01
@@ -206,6 +220,7 @@ tests = TestList
   , TestLabel "day06" day06
   , TestLabel "day07" day07
   , TestLabel "day08" day08
+  , TestLabel "day09" day09
   ]
 
 main :: IO ()
