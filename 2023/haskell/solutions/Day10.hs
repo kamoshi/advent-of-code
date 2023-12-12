@@ -4,7 +4,7 @@ module Day10 where
 import Data.Void (Void)
 import Data.Text (Text)
 import Data.Char (isSpace)
-import Data.Maybe (mapMaybe)
+import Data.Maybe (mapMaybe, catMaybes)
 import Data.Bifunctor (first, bimap)
 import Control.Monad (join)
 import Text.Megaparsec (Parsec, errorBundlePretty, runParser, many, eof, satisfy)
@@ -23,7 +23,7 @@ data Pipe
   | F -- down-right
   deriving (Show, Eq)
 
-data Dir = DLeft | DRight | DUp | DDown
+data Dir = DirL | DirR | DirU | DirD
   deriving (Show, Eq)
 
 type Row  = Int
@@ -60,35 +60,42 @@ get (r, c) = snd . head . filter ((c ==) . fst) . zip [0..] . snd . head . filte
 
 nextD :: Dir -> Pipe -> Maybe Dir
 nextD dir pipe = case (pipe, dir) of
-  (I, DDown)  -> Just DDown
-  (I, DUp)    -> Just DUp
-  (H, DRight) -> Just DRight
-  (H, DLeft)  -> Just DLeft
-  (J, DDown)  -> Just DLeft
-  (J, DRight) -> Just DUp
-  (L, DDown)  -> Just DRight
-  (L, DLeft)  -> Just DUp
-  (T, DUp)    -> Just DLeft
-  (T, DRight) -> Just DDown
-  (F, DUp)    -> Just DRight
-  (F, DLeft)  -> Just DDown
-  _           -> Nothing
+  (I, DirD) -> Just DirD
+  (I, DirU) -> Just DirU
+  (H, DirR) -> Just DirR
+  (H, DirL) -> Just DirL
+  (J, DirD) -> Just DirL
+  (J, DirR) -> Just DirU
+  (L, DirD) -> Just DirR
+  (L, DirL) -> Just DirU
+  (T, DirU) -> Just DirL
+  (T, DirR) -> Just DirD
+  (F, DirU) -> Just DirR
+  (F, DirL) -> Just DirD
+  _         -> Nothing
 
 nextC :: (Row, Col) -> Dir -> (Row, Col)
 nextC (r, c) dir = case dir of
-  DLeft  -> (r, c - 1)
-  DRight -> (r, c + 1)
-  DUp    -> (r - 1, c)
-  DDown  -> (r + 1, c)
+  DirL -> (r, c - 1)
+  DirR -> (r, c + 1)
+  DirU -> (r - 1, c)
+  DirD -> (r + 1, c)
 
 starts :: [[Pipe]] -> (Move, Move)
-starts grid =
-  let s  = findStart grid
-      ds = mapMaybe (\dir -> check dir $ nextC s dir) [ DUp, DDown, DLeft, DRight ]
-  in (head ds, head $ tail ds)
+starts = do
+  sp <- findStart
+  ds <- checkDirs sp
+  return (head ds, head $ tail ds)
   where
-    check :: Dir -> (Row, Col) -> Maybe Move
-    check dir rc = fmap (const (dir, rc)) . nextD dir $ get rc grid
+    check :: Dir -> (Row, Col) -> [[Pipe]] -> Maybe Move
+    check dir rc = fmap (const (dir, rc)) . nextD dir . get rc
+    checkDirs :: (Row, Col) -> [[Pipe]] -> [Move]
+    checkDirs sp = do
+      u <- check DirU $ nextC sp DirU
+      d <- check DirD $ nextC sp DirD
+      l <- check DirL $ nextC sp DirL
+      r <- check DirR $ nextC sp DirR
+      return $ catMaybes [u, d, l, r]
 
 go :: [[Pipe]] -> (Dir, (Row, Col)) -> [(Dir, (Row, Col))]
 go grid = helper
