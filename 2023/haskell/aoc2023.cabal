@@ -29,7 +29,8 @@ library
     Day09
     Day10
 
-  -- other-modules:
+  other-modules:
+    Misc
 
   -- other-extensions:
 
