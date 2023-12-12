@@ -12,6 +12,7 @@ import qualified Day06
 import qualified Day07
 import qualified Day08
 import qualified Day09
+import qualified Day10
 
 
 day01 :: Test
@@ -210,17 +211,82 @@ day09 =
       \1 3 6 10 15 21\n\
       \10 13 16 21 30 45\n"
 
+day10 :: Test
+day10 =
+  let parsedA  = Day10.parse inputA
+      parsedB1 = Day10.parse inputB1
+      parsedB2 = Day10.parse inputB2
+      parsedB3 = Day10.parse inputB3
+      parsedB4 = Day10.parse inputB4
+  in TestList
+    [ TestCase $ assertEqual "A" (Right 4)  (Day10.solveA <$> parsedA)
+    , TestCase $ assertEqual "B" (Right 4)  (Day10.solveB <$> parsedB1)
+    , TestCase $ assertEqual "B" (Right 4)  (Day10.solveB <$> parsedB2)
+    , TestCase $ assertEqual "B" (Right 8)  (Day10.solveB <$> parsedB3)
+    , TestCase $ assertEqual "B" (Right 10) (Day10.solveB <$> parsedB4)
+    ]
+  where
+    inputA =
+      ".....\n\
+      \.S-7.\n\
+      \.|.|.\n\
+      \.L-J.\n\
+      \.....\n"
+    inputB1 =
+      "...........\n\
+      \.S-------7.\n\
+      \.|F-----7|.\n\
+      \.||.....||.\n\
+      \.||.....||.\n\
+      \.|L-7.F-J|.\n\
+      \.|..|.|..|.\n\
+      \.L--J.L--J.\n\
+      \...........\n"
+    inputB2 =
+      "..........\n\
+      \.S------7.\n\
+      \.|F----7|.\n\
+      \.||OOOO||.\n\
+      \.||OOOO||.\n\
+      \.|L-7F-J|.\n\
+      \.|II||II|.\n\
+      \.L--JL--J.\n\
+      \..........\n"
+    inputB3 =
+      ".F----7F7F7F7F-7....\n\
+      \.|F--7||||||||FJ....\n\
+      \.||.FJ||||||||L7....\n\
+      \FJL7L7LJLJ||LJ.L-7..\n\
+      \L--J.L7...LJS7F-7L7.\n\
+      \....F-J..F7FJ|L7L7L7\n\
+      \....L7.F7||L7|.L7L7|\n\
+      \.....|FJLJ|FJ|F7|.LJ\n\
+      \....FJL-7.||.||||...\n\
+      \....L---J.LJ.LJLJ...\n"
+    inputB4 =
+      "FF7FSF7F7F7F7F7F---7\n\
+      \L|LJ||||||||||||F--J\n\
+      \FL-7LJLJ||||||LJL-77\n\
+      \F--JF--7||LJLJ7F7FJ-\n\
+      \L---JF-JLJ.||-FJLJJ7\n\
+      \|F|F-JF---7F7-L7L|7|\n\
+      \|FFJF7L7F-JF7|JL---7\n\
+      \7-L-JL7||F7|L7F-7F7|\n\
+      \L.L7LFJ|||||FJL7||LJ\n\
+      \L7JLJL-JLJLJL--JLJ.L\n"
+
 tests :: Test
 tests = TestList
-  [ TestLabel "day01" day01
-  , TestLabel "day02" day02
-  , TestLabel "day03" day03
-  , TestLabel "day04" day04
-  , TestLabel "day05" day05
-  , TestLabel "day06" day06
-  , TestLabel "day07" day07
-  , TestLabel "day08" day08
-  , TestLabel "day09" day09
+  [ TestLabel "01" day01
+  , TestLabel "02" day02
+  , TestLabel "03" day03
+  , TestLabel "04" day04
+  , TestLabel "05" day05
+  , TestLabel "06" day06
+  , TestLabel "07" day07
+  , TestLabel "08" day08
+  , TestLabel "09" day09
+  , TestLabel "10" day10
   ]
 
 main :: IO ()

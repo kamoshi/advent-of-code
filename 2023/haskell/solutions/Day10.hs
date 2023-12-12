@@ -1,12 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Day10 where
+module Day10 (parse, solveA, solveB) where
 
 import Data.Void (Void)
 import Data.Text (Text)
 import Data.Char (isSpace)
-import Data.Maybe (mapMaybe, catMaybes)
+import Data.List (find)
+import Data.Maybe (mapMaybe, catMaybes, fromJust)
 import Data.Bifunctor (first, bimap)
-import Control.Monad (join)
+import Control.Monad (join, (<=<))
 import Text.Megaparsec (Parsec, errorBundlePretty, runParser, many, eof, satisfy)
 import Text.Megaparsec.Char (newline)
 import Misc (withCoords, pairs)
@@ -55,8 +56,10 @@ parse = first errorBundlePretty . runParser grid ""
 findStart :: [[Pipe]] -> (Row, Col)
 findStart = fst . head . filter ((S ==) . snd) . withCoords
 
-get :: (Row, Col) -> [[Pipe]] -> Pipe
-get (r, c) = snd . head . filter ((c ==) . fst) . zip [0..] . snd . head . filter ((r ==) . fst) . zip [0..]
+get :: (Row, Col) -> [[Pipe]] -> Maybe Pipe
+get (r, c) = nth c <=< nth r
+  where
+    nth n = fmap snd . find ((n ==) . fst) . zip [0..]
 
 nextD :: Dir -> Pipe -> Maybe Dir
 nextD dir pipe = case (pipe, dir) of
@@ -88,20 +91,20 @@ starts = do
   return (head ds, head $ tail ds)
   where
     check :: Dir -> (Row, Col) -> [[Pipe]] -> Maybe Move
-    check dir rc = fmap (const (dir, rc)) . nextD dir . get rc
+    check dir rc = fmap (const (dir, rc)) . nextD dir <=< get rc
     checkDirs :: (Row, Col) -> [[Pipe]] -> [Move]
     checkDirs sp = do
-      u <- check DirU $ nextC sp DirU
-      d <- check DirD $ nextC sp DirD
       l <- check DirL $ nextC sp DirL
       r <- check DirR $ nextC sp DirR
-      return $ catMaybes [u, d, l, r]
+      u <- check DirU $ nextC sp DirU
+      d <- check DirD $ nextC sp DirD
+      return $ catMaybes [l, r, u, d]
 
 go :: [[Pipe]] -> (Dir, (Row, Col)) -> [(Dir, (Row, Col))]
 go grid = helper
   where
     helper :: (Dir, (Row, Col)) -> [(Dir, (Row, Col))]
-    helper (dir, rc) = (dir, rc) : case nextD dir $ get rc grid of
+    helper (dir, rc) = (dir, rc) : case nextD dir . fromJust . get rc $ grid of
       Just dir' -> helper (dir', nextC rc dir')
       Nothing   -> []
 
@@ -121,8 +124,8 @@ verts grid = (findStart grid, findVerts grid)
 
 -- https://en.wikipedia.org/wiki/Shoelace_formula
 -- A = ((x1 * y2 - y1 * x2) + (x2 * y3 - x3 * y2) + ...) / 2
-trapezoid :: ((Row, Col), [(Row, Col)]) -> Double
-trapezoid (sp, vs) = (/2) . fromIntegral . sum . map inner . pairs $ [sp] <> vs <> [sp]
+shoelace :: ((Row, Col), [(Row, Col)]) -> Double
+shoelace (sp, vs) = (/2) . fromIntegral . abs . sum . map inner . pairs $ [sp] <> vs <> [sp]
   where
     inner :: ((Row, Col), (Row, Col)) -> Int
     inner ((r1, c1), (r2, c2)) = r1 * c2 - r2 * c1
@@ -130,8 +133,8 @@ trapezoid (sp, vs) = (/2) . fromIntegral . sum . map inner . pairs $ [sp] <> vs 
 -- https://en.wikipedia.org/wiki/Pick%27s_theorem
 -- A = i + b/2 - 1
 -- i = A - b/2 + 1
-interior :: ((Row, Col), [(Row, Col)]) -> Int -> Double
-interior vs path = abs $ trapezoid vs - fromIntegral path + 1
-
 solveB :: [[Pipe]] -> Double
-solveB grid = interior (verts grid) (solveA grid)
+solveB = do
+  vs <- verts
+  hb <- solveA
+  return $ shoelace vs - fromIntegral hb + 1
