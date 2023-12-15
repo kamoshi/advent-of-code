@@ -13,6 +13,7 @@ import qualified Day07
 import qualified Day08
 import qualified Day09
 import qualified Day10
+import qualified Day15
 
 
 day01 :: Test
@@ -275,6 +276,18 @@ day10 =
       \L.L7LFJ|||||FJL7||LJ\n\
       \L7JLJL-JLJLJL--JLJ.L\n"
 
+day15 :: Test
+day15 =
+  let parsedA1 = Day15.parse inputA1
+      parsedA2 = Day15.parse inputA2
+  in TestList
+    [ TestCase $ assertEqual "A" (Right 52)    (Day15.solveA <$> parsedA1)
+    , TestCase $ assertEqual "A" (Right 1320)  (Day15.solveA <$> parsedA2)
+    ]
+  where
+    inputA1 = "HASH"
+    inputA2 = "rn=1,cm-,qp=3,cm=2,qp-,pc=4,ot=9,ab=5,pc-,pc=6,ot=7"
+
 tests :: Test
 tests = TestList
   [ TestLabel "01" day01
@@ -287,6 +300,7 @@ tests = TestList
   , TestLabel "08" day08
   , TestLabel "09" day09
   , TestLabel "10" day10
+  , TestLabel "15" day15
   ]
 
 main :: IO ()
