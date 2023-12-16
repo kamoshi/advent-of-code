@@ -5,11 +5,12 @@ import Data.Void (Void)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Char (ord, isSpace)
+import Data.List (findIndex)
 import Data.Bifunctor (bimap)
 import Text.Megaparsec (Parsec, errorBundlePretty, runParser, sepBy, optional, eof, many, choice)
 import Text.Megaparsec.Char (newline, alphaNumChar, char)
 import Text.Megaparsec.Char.Lexer (decimal)
-import Lens.Micro (ix, (%~))
+import Lens.Micro (ix, (%~), (.~))
 
 
 data Op
@@ -50,12 +51,14 @@ del :: Text -> [[Entry]] -> [[Entry]]
 del k = ix (hash k) %~ filter ((k /=) . fst)
 
 set :: Text -> Int -> [[Entry]] -> [[Entry]]
-set k v = ix (hash k) %~ update
+set k v = ix (hash k) %~ upsert
   where
-    update :: [Entry] -> [Entry]
-    update es
-      | any ((k ==) . fst) es = map (\(k', v') -> if k == k' then (k, v) else (k', v')) es
-      | otherwise = es <> [(k, v)]
+    update :: Int -> [Entry] -> [Entry]
+    update n = ix n .~ (k, v)
+    insert :: [Entry] -> [Entry]
+    insert = (<> [(k, v)])
+    upsert :: [Entry] -> [Entry]
+    upsert es = maybe (insert es) (`update` es) . findIndex ((k ==) . fst) $ es
 
 solveB :: [(Text, Op)] -> Int
 solveB = sum . zipWith row [1..] . foldl (flip run) (replicate 256 []) . map snd
