@@ -302,7 +302,8 @@ day12 :: Test
 day12 =
   let parsed = Day12.parse input
   in TestList
-    [ TestCase $ assertEqual "A" (Right 21) (Day12.solveA <$> parsed)
+    [ TestCase $ assertEqual "A" (Right 21)     (Day12.solveA <$> parsed)
+    , TestCase $ assertEqual "B" (Right 525152) (Day12.solveB <$> parsed)
     ]
   where
     input =

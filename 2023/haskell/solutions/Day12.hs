@@ -3,8 +3,9 @@ module Day12 where
 
 import Data.Void (Void)
 import Data.Text (Text)
+import Data.List (intercalate)
 import Text.Megaparsec (Parsec, errorBundlePretty, runParser, many, eof, choice, sepBy)
-import Data.Bifunctor (first)
+import Data.Bifunctor (first, bimap)
 import Text.Megaparsec.Char (char, space, newline)
 import Text.Megaparsec.Char.Lexer (decimal)
 
@@ -71,6 +72,8 @@ arrange cs@(c:cr) ns@(n:nr)
 solveA :: [Row] -> Int
 solveA = length . concatMap (uncurry arrange)
 
--- >>> solveA <$> parse input
--- Right 21
+unfold :: Row -> Row
+unfold = bimap (intercalate [U] . replicate 5) (concat . replicate 5)
 
+solveB :: [Row] -> Int
+solveB = solveA . map unfold . take 5
