@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Day11 (parse, solveA) where
+module Day11 (parse, solveA, solveB) where
 
 import Data.Void (Void)
 import Data.Text (Text)
@@ -31,19 +31,6 @@ parse = first errorBundlePretty . runParser grid ""
 pairs :: [a] -> [(a, a)]
 pairs xs = [(x, y) | (x:ys) <- tails xs, y <- ys]
 
-input :: Text
-input =
-  "...#......\n\
-  \.......#..\n\
-  \#.........\n\
-  \..........\n\
-  \......#...\n\
-  \.#........\n\
-  \.........#\n\
-  \..........\n\
-  \.......#..\n\
-  \#...#.....\n"
-
 expanded :: Grid -> ([Row], [Col])
 expanded = bimap filterE (filterE . transpose) . join (,)
   where
@@ -53,8 +40,8 @@ expanded = bimap filterE (filterE . transpose) . join (,)
 galaxies :: Grid -> [(Row, Col)]
 galaxies = map fst . filter ((G ==) . snd) . withCoords
 
-solveA :: Grid -> Int
-solveA = do
+solve :: Int -> Grid -> Int
+solve m = do
   gs <- galaxies
   es <- expanded
   return $ sum . map (distance es) . pairs $ gs
@@ -66,8 +53,16 @@ solveA = do
     crossed :: Int -> Int -> [Int] -> Int
     crossed a b = length . filter (between a b)
     distance :: ([Row], [Col]) -> ((Row, Col), (Row, Col)) -> Int
-    distance (rs, cs) ((r1, c1), (r2, c2)) = abs (r1 - r2) + abs (c1 - c2) + crossed r1 r2 rs + crossed c1 c2 cs
+    distance (rs, cs) ((r1, c1), (r2, c2)) =
+      let dr = abs (r1 - r2)
+          dc = abs (c1 - c2)
+          m' = (m - 1)
+          er = m' * crossed r1 r2 rs
+          ec = m' * crossed c1 c2 cs
+      in dr + dc + er + ec
 
--- >>> solveA <$> parse input
--- Right 374
+solveA :: Grid -> Int
+solveA = solve 2
 
+solveB :: Grid -> Int
+solveB = solve 1000000
