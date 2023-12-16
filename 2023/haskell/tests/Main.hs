@@ -13,6 +13,7 @@ import qualified Day07
 import qualified Day08
 import qualified Day09
 import qualified Day10
+import qualified Day11
 import qualified Day15
 
 
@@ -276,12 +277,31 @@ day10 =
       \L.L7LFJ|||||FJL7||LJ\n\
       \L7JLJL-JLJLJL--JLJ.L\n"
 
+day11 :: Test
+day11 =
+  let parsed = Day11.parse input
+  in TestList
+    [ TestCase $ assertEqual "A" (Right 374) (Day11.solveA <$> parsed)
+    ]
+  where
+    input =
+      "...#......\n\
+      \.......#..\n\
+      \#.........\n\
+      \..........\n\
+      \......#...\n\
+      \.#........\n\
+      \.........#\n\
+      \..........\n\
+      \.......#..\n\
+      \#...#.....\n"
+
 day15 :: Test
 day15 =
   let parsed = Day15.parse input
   in TestList
     [ TestCase $ assertEqual "A" (Right 1320) (Day15.solveA <$> parsed)
-    , TestCase $ assertEqual "A" (Right 145)  (Day15.solveB <$> parsed)
+    , TestCase $ assertEqual "B" (Right 145)  (Day15.solveB <$> parsed)
     ]
   where
     input = "rn=1,cm-,qp=3,cm=2,qp-,pc=4,ot=9,ab=5,pc-,pc=6,ot=7"
@@ -298,6 +318,7 @@ tests = TestList
   , TestLabel "08" day08
   , TestLabel "09" day09
   , TestLabel "10" day10
+  , TestLabel "11" day11
   , TestLabel "15" day15
   ]
 

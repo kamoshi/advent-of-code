@@ -12,7 +12,8 @@ import Utils (readInput)
 --import qualified Day08
 --import qualified Day09
 --import qualified Day10
-import qualified Day15
+import qualified Day11
+--import qualified Day15
 
 
 run :: (Show b, Show c)
@@ -42,4 +43,5 @@ main = do
   --run 08 Day08.parse Day08.solveA Day08.solveB
   --run 09 Day09.parse Day09.solveA Day09.solveB
   --run 10 Day10.parse Day10.solveA Day10.solveB
-  run 15 Day15.parse Day15.solveA Day15.solveB
+  run 11 Day11.parse Day11.solveA Day11.solveA
+  --run 15 Day15.parse Day15.solveA Day15.solveB
