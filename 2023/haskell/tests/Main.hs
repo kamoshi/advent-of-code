@@ -278,15 +278,13 @@ day10 =
 
 day15 :: Test
 day15 =
-  let parsedA1 = Day15.parse inputA1
-      parsedA2 = Day15.parse inputA2
+  let parsed = Day15.parse input
   in TestList
-    [ TestCase $ assertEqual "A" (Right 52)    (Day15.solveA <$> parsedA1)
-    , TestCase $ assertEqual "A" (Right 1320)  (Day15.solveA <$> parsedA2)
+    [ TestCase $ assertEqual "A" (Right 1320) (Day15.solveA <$> parsed)
+    , TestCase $ assertEqual "A" (Right 145)  (Day15.solveB <$> parsed)
     ]
   where
-    inputA1 = "HASH"
-    inputA2 = "rn=1,cm-,qp=3,cm=2,qp-,pc=4,ot=9,ab=5,pc-,pc=6,ot=7"
+    input = "rn=1,cm-,qp=3,cm=2,qp-,pc=4,ot=9,ab=5,pc-,pc=6,ot=7"
 
 tests :: Test
 tests = TestList

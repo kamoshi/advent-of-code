@@ -42,4 +42,4 @@ main = do
   --run 08 Day08.parse Day08.solveA Day08.solveB
   --run 09 Day09.parse Day09.solveA Day09.solveB
   --run 10 Day10.parse Day10.solveA Day10.solveB
-  run 15 Day15.parse Day15.solveA Day15.solveA
+  run 15 Day15.parse Day15.solveA Day15.solveB
