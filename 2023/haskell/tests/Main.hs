@@ -14,6 +14,7 @@ import qualified Day08
 import qualified Day09
 import qualified Day10
 import qualified Day11
+import qualified Day12
 import qualified Day15
 
 
@@ -297,6 +298,21 @@ day11 =
       \.......#..\n\
       \#...#.....\n"
 
+day12 :: Test
+day12 =
+  let parsed = Day12.parse input
+  in TestList
+    [ TestCase $ assertEqual "A" (Right 21) (Day12.solveA <$> parsed)
+    ]
+  where
+    input =
+      "???.### 1,1,3\n\
+      \.??..??...?##. 1,1,3\n\
+      \?#?#?#?#?#?#?#? 1,3,1,6\n\
+      \????.#...#... 4,1,1\n\
+      \????.######..#####. 1,6,5\n\
+      \?###???????? 3,2,1\n"
+
 day15 :: Test
 day15 =
   let parsed = Day15.parse input
@@ -320,6 +336,7 @@ tests = TestList
   , TestLabel "09" day09
   , TestLabel "10" day10
   , TestLabel "11" day11
+  , TestLabel "12" day12
   , TestLabel "15" day15
   ]
 

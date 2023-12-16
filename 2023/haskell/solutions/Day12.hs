@@ -13,7 +13,7 @@ data Cell
   = U -- ? unknown
   | O -- . operational
   | D -- # damaged
-  deriving Show
+  deriving (Show, Eq)
 
 type Row = ([Cell], [Int])
 
@@ -43,11 +43,34 @@ parse = first errorBundlePretty . runParser rows ""
     rows = many row <* eof
 
 arrange :: [Cell] -> [Int] -> [[Cell]]
-arrange = _
+arrange [] [] = [[]]
+arrange [] _  = []
+arrange cs []
+  | D `notElem` cs = [map (const O) cs]
+  | otherwise      = []
+arrange cs@(c:cr) ns@(n:nr)
+  | canFill && canSkip = tryFill <> trySkip
+  | canFill            = tryFill
+  | canSkip            = trySkip
+  | otherwise          = []
+  where
+    (window, rest) = splitAt n cs
+    fill :: [Cell] -> [Cell]
+    fill = (replicate n D ++)
+    canSkip :: Bool
+    canSkip = c /= D
+    trySkip :: [[Cell]]
+    trySkip = map (O:) (arrange cr ns)
+    canFill :: Bool
+    canFill = O `notElem` window && n == length window && (null rest || head rest /= D)
+    tryFill :: [[Cell]]
+    tryFill
+      | null rest = map fill (arrange rest nr)
+      | otherwise = map (fill . (O:)) (arrange (tail rest) nr)
 
 solveA :: [Row] -> Int
 solveA = length . concatMap (uncurry arrange)
 
--- >>> parse input
--- Right [([U,U,U,O,D,D,D],[1,1,3]),([O,U,U,O,O,U,U,O,O,O,U,D,D,O],[1,1,3]),([U,D,U,D,U,D,U,D,U,D,U,D,U,D,U],[1,3,1,6]),([U,U,U,U,O,D,O,O,O,D,O,O,O],[4,1,1]),([U,U,U,U,O,D,D,D,D,D,D,O,O,D,D,D,D,D,O],[1,6,5]),([U,D,D,D,U,U,U,U,U,U,U,U],[3,2,1])]
+-- >>> solveA <$> parse input
+-- Right 21
 
