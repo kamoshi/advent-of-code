@@ -3,27 +3,19 @@ module Day24 (parse, solveA, solveB) where
 
 import Data.Void (Void)
 import Data.Text (Text)
+import Data.Maybe (mapMaybe)
+import Data.Bifunctor (first, bimap)
 import Text.Megaparsec (Parsec, errorBundlePretty, runParser, eof, many, sepBy)
-import Data.Bifunctor (first, Bifunctor (bimap))
 import Text.Megaparsec.Char (char, space)
 import Text.Megaparsec.Char.Lexer (signed, decimal)
-import Numeric.LinearAlgebra (Matrix, R, (|>), (><), linearSolve, asColumn, fromColumns, flatten, toList)
+import Numeric.LinearAlgebra (R, (|>), linearSolve, asColumn, fromColumns, flatten, toList, fromLists, col)
 import Misc (paired)
-import Data.Maybe (mapMaybe)
 
 
 type Ray  = ([R], [R])
 
-
-input :: Text
-input =
-  "19, 13, 30 @ -2,  1, -2\n\
-  \18, 19, 22 @ -1, -1, -2\n\
-  \20, 25, 34 @ -2, -2, -4\n\
-  \12, 31, 28 @ -1, -2, -1\n\
-  \20, 19, 15 @  1, -5, -3\n"
-
 type Parser = Parsec Void Text
+
 
 parse :: Text -> Either String [Ray]
 parse = first errorBundlePretty . runParser rays ""
@@ -69,11 +61,29 @@ solveAFor s e = length . filter isBoth . mapMaybe (uncurry intersect2D) . paired
 solveA :: [Ray] -> Int
 solveA = solveAFor 200000000000000 400000000000000
 
--- >>> head . paired <$> parse input
--- Right (([19.0,13.0,30.0],[-2.0,1.0,-2.0]),([18.0,19.0,22.0],[-1.0,-1.0,-2.0]))
+findThrow :: [Ray] -> Maybe [Int]
+findThrow rays =
+  let
+    ([sx1, sy1, sz1], [vx1, vy1, vz1]) = rays !! 0
+    ([sx2, sy2, sz2], [vx2, vy2, vz2]) = rays !! 1
+    ([sx3, sy3, sz3], [vx3, vy3, vz3]) = rays !! 2
+    consts = fromLists
+      [ [0, vz2 - vz1, vy1 - vy2, 0, sz1 - sz2, sy2 - sy1]
+      , [0, vz3 - vz1, vy1 - vy3, 0, sz1 - sz3, sy3 - sy1]
+      , [vz1 - vz2, 0, vx2 - vx1, sz2 - sz1, 0, sx1 - sx2]
+      , [vz1 - vz3, 0, vx3 - vx1, sz3 - sz1, 0, sx1 - sx3]
+      , [vy2 - vy1, vx1 - vx2, 0, sy1 - sy2, sx2 - sx1, 0]
+      , [vy3 - vy1, vx1 - vx3, 0, sy1 - sy3, sx3 - sx1, 0]
+      ]
+    coeffs = col
+      [ vy1 * sz1 - sy1 * vz1 + sy2 * vz2 - vy2 * sz2
+      , vy1 * sz1 - sy1 * vz1 + sy3 * vz3 - vy3 * sz3
+      , sx1 * vz1 - vx1 * sz1 + vx2 * sz2 - sx2 * vz2
+      , sx1 * vz1 - vx1 * sz1 + vx3 * sz3 - sx3 * vz3
+      , vx1 * sy1 - sx1 * vy1 + sx2 * vy2 - vx2 * sy2
+      , vx1 * sy1 - sx1 * vy1 + sx3 * vy3 - vx3 * sy3
+      ]
+    in map round . toList . flatten <$> linearSolve consts coeffs
 
--- >>> solveA <$> parse input
--- Right 2
-
-solveB = const 1
-
+solveB :: [Ray] -> Int
+solveB = maybe 0 (sum . take 3) . findThrow
