@@ -31,6 +31,7 @@ library
     Day11
     Day12
     Day15
+    Day20
     Day24
 
   other-modules:
