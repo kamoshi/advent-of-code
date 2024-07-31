@@ -1,5 +1,7 @@
 module Day02 (parse, solveA, solveB) where
 
+import Data.List (sort, tails)
+
 splitOn :: (Eq a) => a -> [a] -> [[a]]
 splitOn _ [] = []
 splitOn delimiter xs =
@@ -8,23 +10,26 @@ splitOn delimiter xs =
         [] -> []
         _ : rest -> splitOn delimiter rest
 
-parse :: String -> [(Int, Int, Int)]
-parse = map toTuple . lines
+pairs :: [a] -> [(a, a)]
+pairs xs = [(x, y) | (x : ys) <- tails xs, y <- ys]
+
+parse :: String -> [[Int]]
+parse = map (map read . splitOn 'x') . lines
+
+toArea :: [Int] -> Int
+toArea = calculate . map (uncurry (*)) . pairs
  where
-  toTuple :: String -> (Int, Int, Int)
-  toTuple str = let [a, b, c] = splitOn 'x' str in (read a, read b, read c)
+  calculate :: [Int] -> Int
+  calculate sides = (sum . map (2 *)) sides + minimum sides
 
-toArea :: (Int, Int, Int) -> Int
-toArea (l, w, h) =
-  let a = l * w
-      b = w * h
-      c = h * l
-   in 2 * a + 2 * b + 2 * c + min a (min b c)
-
-solveA :: [(Int, Int, Int)] -> Int
+solveA :: [[Int]] -> Int
 solveA = sum . map toArea
 
--- >>> map toArea $ parse "2x3x4"
--- [64]
-
-solveB = undefined
+solveB :: [[Int]] -> Int
+solveB = sum . map calcWrap
+ where
+  calcWrap :: [Int] -> Int
+  calcWrap dims =
+    let wrap = (2 *) . sum . take 2 $ sort dims
+        bow = product dims
+     in wrap + bow
