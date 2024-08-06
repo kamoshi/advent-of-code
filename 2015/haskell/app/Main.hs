@@ -1,19 +1,24 @@
-{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE ImportQualifiedPost #-}
+
 module Main where
 
-import qualified Day01
-import qualified Day02
-import qualified Day03
+import Data.Text (Text)
+import Data.Text.IO qualified as TIO
+import Day01 qualified
+import Day02 qualified
+import Day03 qualified
+import Day04 qualified
+import Day05 qualified
 import Text.Printf (printf)
 
-readDay :: Int -> IO String
-readDay n = readFile $ getPath n
+readDay :: Int -> IO Text
+readDay n = TIO.readFile $ getPath n
  where
   getPath n = "../.inputs/" <> printf "%02d" n
 
 main :: IO ()
 main = do
-  content <- readDay 2
-  let parsed = Day02.parse content
-  print $ Day02.solveA parsed
-  print @Int $ Day02.solveB parsed
+  content <- Day05.parse <$> readDay 5
+  print $ Day05.solveA content
+
+-- print @Int $ Day05.solveB parsed
