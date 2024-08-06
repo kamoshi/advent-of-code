@@ -2,12 +2,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeApplications #-}
 
-module Day05 (parse, solveA) where
+module Day05 (parse, solveA, solveB) where
 
 import Control.Monad (foldM)
 import Control.Monad qualified as T
-import Data.Either (fromLeft)
-import Data.Maybe (fromMaybe, isNothing)
+import Data.List (tails)
+import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import Data.Text qualified as T
 
@@ -36,9 +36,21 @@ isNice = maybe False (check . snd) . foldM next ('_', (False, 0)) . T.unpack
 solveA :: [Text] -> Int
 solveA = length . filter isNice
 
-test :: Text
-test = "dvszwmarrgswjxmbau"
+checkTriple :: Text -> Bool
+checkTriple text
+  | T.length text > 2 = T.index text 0 == T.index text 2
+  | otherwise = False
 
--- $> isNice test
+checkPairs :: Text -> Bool
+checkPairs "" = False
+checkPairs text =
+  let (cs, rest) = T.splitAt 2 text
+   in cs `T.isInfixOf` rest
 
-solveB = undefined
+isNiceB :: Text -> Bool
+isNiceB text =
+  let parts = T.tails text
+   in any checkTriple parts && any checkPairs parts
+
+solveB :: [Text] -> Int
+solveB = length . filter isNiceB

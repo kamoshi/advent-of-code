@@ -20,5 +20,6 @@ main :: IO ()
 main = do
   content <- Day05.parse <$> readDay 5
   print $ Day05.solveA content
+  print $ Day05.solveB content
 
 -- print @Int $ Day05.solveB parsed
