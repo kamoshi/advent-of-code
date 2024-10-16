@@ -1,0 +1,58 @@
+cabal-version:      3.4
+name:               aoc2024
+version:            0.0.1
+-- synopsis:
+-- description:
+license:            MIT
+-- license-file:       LICENSE
+author:             Maciej Jur
+maintainer:         maciej@kamoshi.org
+-- copyright:
+build-type:         Simple
+-- extra-doc-files:    CHANGELOG.md
+-- extra-source-files:
+
+common warnings
+    ghc-options: -Wall
+
+library
+    import:           warnings
+
+    exposed-modules:
+        Advent
+        Day01
+
+    -- other-modules:
+    -- other-extensions:
+    build-depends:
+      base ^>=4.20.0.0,
+      text ^>=2.1,
+
+    hs-source-dirs:   solutions
+    default-language: Haskell2010
+
+executable aoc2024
+    import:           warnings
+    main-is:          Main.hs
+    -- other-modules:
+    -- other-extensions:
+    build-depends:
+        base ^>=4.20.0.0,
+        text ^>=2.1,
+        aoc2024
+
+    hs-source-dirs:   app
+    default-language: Haskell2010
+
+test-suite aoc2024-test
+    import:           warnings
+    default-language: Haskell2010
+    -- other-modules:
+    -- other-extensions:
+    type:             exitcode-stdio-1.0
+    hs-source-dirs:   test
+    main-is:          Main.hs
+    build-depends:
+        base ^>=4.20.0.0,
+        text ^>=2.1,
+        aoc2024
