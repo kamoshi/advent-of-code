@@ -10,6 +10,7 @@ import Text.Printf (printf)
 {- ORMOLU_DISABLE -}
 import Advent (Day)
 import Day01 qualified as Day01
+import Day02 qualified as Day02
 {- ORMOLU_ENABLE -}
 
 readInput :: Int -> IO T.Text
@@ -17,7 +18,8 @@ readInput = T.readFile . printf "../.input/%02d"
 
 days :: [Day]
 days =
-  [ Day01.day
+  [ Day01.day,
+    Day02.day
   ]
 
 main :: IO ()
