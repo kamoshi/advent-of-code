@@ -27,31 +27,34 @@ memInit ns = do
   ptr <- newSTRef 0
   pure (arr, ptr)
 
+memOffsetRead :: STUArray s Int Int -> Int -> ST s Int
+memOffsetRead arr ptr = readArray arr ptr >>= readArray arr
+
+memOffsetWrite :: STUArray s Int Int -> Int -> Int -> ST s ()
+memOffsetWrite arr ptr new = readArray arr ptr >>= flip (writeArray arr) new
+
+memSimpleOp :: (Int -> Int -> Int) -> (STUArray s Int Int, STRef s Int) -> ST s ()
+memSimpleOp op (arr, ptr) = do
+  ptrVal <- readSTRef ptr
+  result <- liftA2 op (memOffsetRead arr (ptrVal + 1)) (memOffsetRead arr (ptrVal + 2))
+  memOffsetWrite arr (ptrVal + 3) result
+  modifySTRef ptr (+ 4)
+
 memStep :: forall s. Memory s -> ST s (Memory s)
-memStep (arr, ptr) = do
-  ptr' <- readSTRef ptr
-  op <- readArray arr ptr'
-  case op of
+memStep tape = do
+  ptr <- tape |> snd |> readSTRef
+  opN <- tape |> fst |> flip readArray ptr
+  case opN of
     1 -> do
-      idxA <- readArray arr (ptr' + 1)
-      a <- readArray arr idxA
-      idxB <- readArray arr (ptr' + 2)
-      b <- readArray arr idxB
-      idxC <- readArray arr (ptr' + 3)
-      writeArray arr idxC (a + b)
-      modifySTRef ptr (+ 4)
-      memStep (arr, ptr)
+      memSimpleOp (+) tape
+      memStep tape
     2 -> do
-      idxA <- readArray arr (ptr' + 1)
-      a <- readArray arr idxA
-      idxB <- readArray arr (ptr' + 2)
-      b <- readArray arr idxB
-      c <- readArray arr (ptr' + 3)
-      writeArray arr c (a * b)
-      modifySTRef ptr (+ 4)
-      memStep (arr, ptr)
-    99 -> pure (arr, ptr)
-    _ -> error $ "Unknown OP code: " <> show ptr'
+      memSimpleOp (*) tape
+      memStep tape
+    99 ->
+      pure tape
+    _ ->
+      error $ "Unknown opcode: " <> show opN
 
 solveA :: [Int] -> Int
 solveA ns = runST $ do
