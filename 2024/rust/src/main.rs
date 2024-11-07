@@ -1,9 +1,17 @@
 use std::fs::read_to_string;
 use std::path::Path;
 
-mod advent;
+use advent::Day;
 
+mod advent;
 mod day01;
+
+fn days() -> impl IntoIterator<Item = Day> {
+    [
+        day01::day(),
+        // day02::day(),
+    ]
+}
 
 fn read_input(day: usize) -> String {
     let path = format!("../.input/{:02}", day);
@@ -16,9 +24,7 @@ fn read_input(day: usize) -> String {
 }
 
 fn main() {
-    let days = [day01::day()];
-
-    for (day, run) in days {
+    for (day, run) in days() {
         println!("Day {}", day);
 
         let text = read_input(day);
