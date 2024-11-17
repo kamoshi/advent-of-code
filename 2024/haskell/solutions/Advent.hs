@@ -1,12 +1,17 @@
-{-# LANGUAGE ExplicitForAll #-}
 {-# LANGUAGE GADTs #-}
 
-module Advent (Day, mkDay) where
+module Advent (Day, mkDay, (|>)) where
 
+import Data.Function ((&))
 import Data.Text (Text)
 
+infixl 1 |>
+
+(|>) :: a -> (a -> b) -> b
+(|>) = (&)
+
 data Solution where
-  Solution :: forall a b. (Show a, Show b) => a -> b -> Solution
+  Solution :: (Show a, Show b) => a -> b -> Solution
 
 instance Show Solution where
   show (Solution a b) = "A: " <> show a <> "\nB: " <> show b
