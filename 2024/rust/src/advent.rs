@@ -1,4 +1,6 @@
-use std::fmt::Debug;
+use std::{fmt::Debug, time::Instant};
+
+pub type Error = Box<dyn std::error::Error>;
 
 pub trait Solution: Debug {}
 
@@ -23,9 +25,9 @@ where
 {
 }
 
-type Parser<A> = fn(&str) -> Result<A, String>;
+type Parser<A> = fn(&str) -> Result<A, Error>;
 type Solver<A, B> = fn(&A) -> B;
-type Runner = Box<dyn Fn(&str) -> Result<Box<dyn Solution + 'static>, String>>;
+type Runner = Box<dyn Fn(&str) -> Result<Box<dyn Solution + 'static>, Error>>;
 pub type Day = (usize, Runner);
 
 pub fn mk_day<A, B, C>(day: usize, parse: Parser<A>, a: Solver<A, B>, b: Solver<A, C>) -> Day
@@ -38,7 +40,11 @@ where
         day,
         Box::new(move |input| {
             let text = parse(input)?;
+
+            let start = Instant::now();
             let a = a(&text);
+            println!("Execution time: {:?}", start.elapsed());
+
             let b = b(&text);
             Ok(Box::new(SolutionExists(a, b)))
         }),
