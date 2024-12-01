@@ -1,6 +1,6 @@
 use std::arch::x86_64::*;
 use std::collections::HashMap;
-use std::mem::{transmute, MaybeUninit};
+use std::mem::MaybeUninit;
 
 use crate::advent::{day, Error};
 
@@ -21,13 +21,14 @@ fn parse(text: &str) -> Result<Input, Error> {
 }
 
 fn solve_a((ls, rs): &Input) -> i32 {
+    assert_eq!(ls.len(), rs.len(), "Vec len mismatch!");
     let mut ls = ls.clone();
     let mut rs = rs.clone();
     ls.sort_unstable();
     rs.sort_unstable();
 
-    assert_eq!(ls.len(), rs.len(), "Vec len mismatch!");
-    const LANES: usize = size_of::<__m256i>() / size_of::<i32>();
+    type Packed = __m256i;
+    const LANES: usize = size_of::<Packed>() / size_of::<i32>();
 
     let padded = ((ls.len() + LANES - 1) / LANES) * LANES;
     ls.resize(padded, 0);
@@ -37,15 +38,15 @@ fn solve_a((ls, rs): &Input) -> i32 {
     let mut offset = 0;
     while offset < padded {
         unsafe {
-            let chunk_l = _mm256_load_si256(ls[offset..].as_ptr() as *const __m256i);
-            let chunk_r = _mm256_load_si256(rs[offset..].as_ptr() as *const __m256i);
+            let chunk_l = _mm256_loadu_si256(ls[offset..].as_ptr() as *const Packed);
+            let chunk_r = _mm256_loadu_si256(rs[offset..].as_ptr() as *const Packed);
 
             let chunk_sub = _mm256_sub_epi32(chunk_l, chunk_r);
             let chunk_abs = _mm256_abs_epi32(chunk_sub);
 
-            let mut temp = MaybeUninit::<__m256i>::uninit();
+            let mut temp = MaybeUninit::<Packed>::uninit();
             _mm256_store_si256(temp.as_mut_ptr(), chunk_abs);
-            let temp: [i32; 8] = transmute(temp.assume_init());
+            let temp: [i32; 8] = std::mem::transmute(temp.assume_init());
 
             result += temp.into_iter().sum::<i32>();
         }
