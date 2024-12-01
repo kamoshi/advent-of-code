@@ -43,7 +43,7 @@ fn solve_a((ls, rs): &Input) -> i32 {
             let chunk_abs = _mm256_abs_epi32(chunk_sub);
 
             let mut temp = [0; LANES];
-            _mm256_store_si256(temp.as_mut_ptr() as *mut __m256i, chunk_abs);
+            _mm256_storeu_si256(temp.as_mut_ptr() as *mut __m256i, chunk_abs);
 
             result += temp.into_iter().sum::<i32>();
         }
