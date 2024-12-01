@@ -43,9 +43,12 @@ where
 
             let start = Instant::now();
             let a = a(&text);
-            println!("Execution time: {:?}", start.elapsed());
+            println!("Execution time A: {:?}", start.elapsed());
 
+            let start = Instant::now();
             let b = b(&text);
+            println!("Execution time B: {:?}", start.elapsed());
+
             Ok(Box::new(SolutionExists(a, b)))
         }),
     )

@@ -1,4 +1,5 @@
 use std::arch::x86_64::*;
+use std::collections::HashMap;
 
 use crate::advent::{day, Error};
 
@@ -49,8 +50,19 @@ fn solve_a((ls, rs): &Input) -> i32 {
     result
 }
 
-fn solve_b(input: &Input) -> i32 {
-    2
+fn solve_b((ls, rs): &Input) -> i32 {
+    let mut counts = HashMap::<i32, i32>::new();
+
+    for &r in rs {
+        *counts.entry(r).or_insert(0) += 1;
+    }
+
+    let mut result = 0;
+    for &l in ls {
+        result += l * counts.get(&l).unwrap_or(&0);
+    }
+
+    result
 }
 
 day!(1, parse, solve_a, solve_b);
