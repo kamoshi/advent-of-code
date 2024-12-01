@@ -36,20 +36,16 @@ fn solve_a((ls, rs): &Input) -> i32 {
     let mut offset = 0;
     while offset < padded {
         unsafe {
-            let chunk_l = _mm256_loadu_si256(ls[offset..].as_ptr() as *const __m256i);
-            let chunk_r = _mm256_loadu_si256(rs[offset..].as_ptr() as *const __m256i);
+            let chunk_l = _mm256_load_si256(ls[offset..].as_ptr() as *const __m256i);
+            let chunk_r = _mm256_load_si256(rs[offset..].as_ptr() as *const __m256i);
 
             let chunk_sub = _mm256_sub_epi32(chunk_l, chunk_r);
             let chunk_abs = _mm256_abs_epi32(chunk_sub);
 
-            let part_l = _mm256_extracti128_si256(chunk_abs, 0);
-            let part_h = _mm256_extracti128_si256(chunk_abs, 1);
+            let mut temp = [0; LANES];
+            _mm256_store_si256(temp.as_mut_ptr() as *mut __m256i, chunk_abs);
 
-            let temp = _mm_hadd_epi32(part_l, part_h);
-            let temp = _mm_hadd_epi32(temp, temp);
-            let temp = _mm_hadd_epi32(temp, temp);
-            let temp = _mm_cvtsi128_si32(temp);
-            result += temp;
+            result += temp.into_iter().sum::<i32>();
         }
 
         offset += LANES;
