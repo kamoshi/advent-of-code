@@ -26,25 +26,33 @@ fn solve_a((ls, rs): &Input) -> i32 {
     rs.sort_unstable();
 
     assert_eq!(ls.len(), rs.len(), "Vec len mismatch!");
-    let len = ls.len();
+    const LANES: usize = size_of::<__m256i>() / size_of::<i32>();
+
+    let padded = ((ls.len() + LANES - 1) / LANES) * LANES;
+    ls.resize(padded, 0);
+    rs.resize(padded, 0);
+
     let mut result = 0;
-
     let mut offset = 0;
-    while offset + 4 <= len {
+    while offset < padded {
         unsafe {
-            let chunk_l = _mm_load_si128(ls[offset..].as_ptr() as *const __m128i);
-            let chunk_r = _mm_load_si128(rs[offset..].as_ptr() as *const __m128i);
+            let chunk_l = _mm256_loadu_si256(ls[offset..].as_ptr() as *const __m256i);
+            let chunk_r = _mm256_loadu_si256(rs[offset..].as_ptr() as *const __m256i);
 
-            let chunk_sub = _mm_sub_epi32(chunk_l, chunk_r);
-            let chunk_abs = _mm_abs_epi32(chunk_sub);
+            let chunk_sub = _mm256_sub_epi32(chunk_l, chunk_r);
+            let chunk_abs = _mm256_abs_epi32(chunk_sub);
 
-            let temp = _mm_hadd_epi32(chunk_abs, chunk_abs);
+            let part_l = _mm256_extracti128_si256(chunk_abs, 0);
+            let part_h = _mm256_extracti128_si256(chunk_abs, 1);
+
+            let temp = _mm_hadd_epi32(part_l, part_h);
+            let temp = _mm_hadd_epi32(temp, temp);
             let temp = _mm_hadd_epi32(temp, temp);
             let temp = _mm_cvtsi128_si32(temp);
             result += temp;
         }
 
-        offset += 4;
+        offset += LANES;
     }
 
     result
