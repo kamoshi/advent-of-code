@@ -1,5 +1,6 @@
 use std::arch::x86_64::*;
 use std::collections::HashMap;
+use std::mem::{transmute, MaybeUninit};
 
 use crate::advent::{day, Error};
 
@@ -42,8 +43,9 @@ fn solve_a((ls, rs): &Input) -> i32 {
             let chunk_sub = _mm256_sub_epi32(chunk_l, chunk_r);
             let chunk_abs = _mm256_abs_epi32(chunk_sub);
 
-            let mut temp = [0; LANES];
-            _mm256_storeu_si256(temp.as_mut_ptr() as *mut __m256i, chunk_abs);
+            let mut temp = MaybeUninit::<__m256i>::uninit();
+            _mm256_store_si256(temp.as_mut_ptr(), chunk_abs);
+            let temp: [i32; 8] = transmute(temp.assume_init());
 
             result += temp.into_iter().sum::<i32>();
         }
