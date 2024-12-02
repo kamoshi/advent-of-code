@@ -22,6 +22,7 @@ library
         Advent
         Sample
         Day01
+        Day02
 
     -- other-modules:
     -- other-extensions:
