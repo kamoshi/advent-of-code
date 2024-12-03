@@ -39,7 +39,9 @@ where
     (
         day,
         Box::new(move |input| {
+            let start = Instant::now();
             let text = parse(input)?;
+            println!("Parse time: {:?}", start.elapsed());
 
             let start = Instant::now();
             let a = a(&text);

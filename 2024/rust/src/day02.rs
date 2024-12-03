@@ -2,17 +2,24 @@ use std::arch::x86_64::*;
 
 use crate::advent::{day, Error};
 
-type Input = Vec<Vec<i32>>;
+type Input = Vec<Box<[i32]>>;
 
 fn parse(text: &str) -> Result<Input, Error> {
-    text.lines()
-        .map(|line| {
-            line.split_whitespace()
-                .map(str::parse::<i32>)
-                .collect::<Result<_, _>>()
-        })
-        .collect::<Result<_, _>>()
-        .map_err(Into::into)
+    let mut data = vec![];
+    let mut temp = [0; 8];
+
+    for line in text.lines() {
+        let mut ptr = 0;
+
+        for word in line.split_whitespace() {
+            temp[ptr] = word.parse::<i32>()?;
+            ptr += 1;
+        }
+
+        data.push(Box::from(&temp[..ptr]));
+    }
+
+    Ok(data)
 }
 
 #[inline(always)]
@@ -43,9 +50,7 @@ fn check_decreasing(diff: __m128i, mask: __m128i) -> i32 {
 
 fn check(line: &[i32]) -> bool {
     let len = line.len();
-    if len < 2 {
-        return false;
-    }
+    assert!(4 < len && len < 9);
 
     const LANES: usize = size_of::<__m128i>() / size_of::<i32>();
 
