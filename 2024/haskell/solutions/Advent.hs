@@ -1,14 +1,20 @@
 {-# LANGUAGE GADTs #-}
 
-module Advent (Day, mkDay, (|>)) where
+module Advent (Day, mkDay, exec, (|>)) where
 
+import Data.Bifunctor (first)
 import Data.Function ((&))
 import Data.Text (Text)
+import Data.Void (Void)
+import Text.Megaparsec (Parsec, errorBundlePretty, runParser)
 
 infixl 1 |>
 
 (|>) :: a -> (a -> b) -> b
 (|>) = (&)
+
+exec :: Parsec Void Text a -> Text -> Either String a
+exec parser = first errorBundlePretty . runParser parser ""
 
 data Solution where
   Solution :: (Show a, Show b) => a -> b -> Solution
