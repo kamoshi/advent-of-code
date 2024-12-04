@@ -87,7 +87,7 @@ fn solve_a(input: &Input) -> usize {
     input.iter().filter(|line| check(line)).count()
 }
 
-fn solve_b(input: &Input) -> i32 {
+fn solve_b(_input: &Input) -> i32 {
     2
 }
 

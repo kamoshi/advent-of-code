@@ -6,11 +6,13 @@ use advent::Day;
 mod advent;
 mod day01;
 mod day02;
+mod day04;
 
 fn days() -> impl IntoIterator<Item = Day> {
     [
         day01::day(),
         day02::day(),
+        day04::day(),
         // d
     ]
 }
