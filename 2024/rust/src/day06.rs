@@ -1,86 +1,127 @@
+use std::collections::HashSet;
+
 use crate::advent::{day, Error};
 
-day!(7, parse, solve_a, solve_b);
+day!(6, parse, solve_a, solve_b);
 
-type Input = Vec<(u64, Vec<u64>)>;
+type Point = (usize, usize);
+type Cache = Box<[Vec<Point>]>;
+type Input = (Point, Point, Cache, Cache);
+
+enum Dir {
+    U,
+    D,
+    L,
+    R,
+}
+
+impl Dir {
+    fn turn_right(&self) -> Self {
+        match self {
+            Dir::U => Dir::R,
+            Dir::D => Dir::L,
+            Dir::L => Dir::U,
+            Dir::R => Dir::D,
+        }
+    }
+}
 
 fn parse(text: &str) -> Result<Input, Error> {
-    let mut data = vec![];
+    let cols = text.lines().next().map(str::len).unwrap();
 
-    for line in text.lines() {
-        let (outcome, numbers) = line.split_once(':').ok_or("Malformed data")?;
+    let mut guard = (0, 0);
+    let mut desks = vec![];
+    let mut rows = 0;
 
-        let outcome = outcome.parse()?;
-        let numbers = numbers
-            .split_whitespace()
-            .map(str::parse)
-            .collect::<Result<_, _>>()?;
+    for (row, line) in text.lines().enumerate() {
+        rows += 1;
 
-        data.push((outcome, numbers))
+        for (col, char) in line.chars().enumerate() {
+            match char {
+                '#' => desks.push((row, col)),
+                '^' => guard = (row, col),
+                _ => (),
+            }
+        }
     }
 
-    Ok(data)
+    let mut hash_rows: Cache = Box::from(vec![vec![]; rows]);
+    let mut hash_cols: Cache = Box::from(vec![vec![]; cols]);
+
+    for point @ (row, col) in desks {
+        hash_rows[row].push(point);
+        hash_cols[col].push(point);
+    }
+
+    Ok((guard, (rows, cols), hash_rows, hash_cols))
 }
 
-#[allow(clippy::match_overlapping_arm)]
-fn concat(a: u64, b: u64) -> u64 {
-    match b {
-        ..10 => 10 * a + b,
-        ..100 => 100 * a + b,
-        ..1000 => 1000 * a + b,
-        ..10000 => 10000 * a + b,
-        ..100000 => 100000 * a + b,
-        ..1000000 => 1000000 * a + b,
-        ..10000000 => 10000000 * a + b,
-        ..100000000 => 100000000 * a + b,
-        _ => panic!(),
+fn solve_a((guard, (rows, cols), hash_rows, hash_cols): &Input) -> usize {
+    let mut pos = *guard;
+    let mut dir = Dir::U;
+
+    let mut visited = HashSet::<Point>::from_iter([pos]);
+
+    loop {
+        let desks = match dir {
+            Dir::L | Dir::R => hash_rows[pos.0].as_slice(),
+            Dir::U | Dir::D => hash_cols[pos.1].as_slice(),
+        };
+
+        let first = match dir {
+            Dir::U => desks.iter().rev().find(|p| p.0 < pos.0),
+            Dir::D => desks.iter().find(|p| p.0 > pos.0),
+            Dir::L => desks.iter().rev().find(|p| p.1 < pos.1),
+            Dir::R => desks.iter().find(|p| p.1 > pos.1),
+        };
+
+        if let Some(first) = first {
+            let (step_row, step_col) = match dir {
+                Dir::U => (-1, 0),
+                Dir::D => (1, 0),
+                Dir::L => (0, -1),
+                Dir::R => (0, 1),
+            };
+
+            let mut curr = pos;
+            loop {
+                let next = (
+                    (curr.0 as isize + step_row) as usize,
+                    (curr.1 as isize + step_col) as usize,
+                );
+
+                if next == (first.0, first.1) {
+                    break;
+                }
+
+                curr = next;
+                visited.insert(curr);
+            }
+
+            pos = curr;
+            dir = dir.turn_right();
+        } else {
+            let path = match dir {
+                Dir::U => 0..pos.0,
+                Dir::D => pos.0..*rows,
+                Dir::L => 0..pos.1,
+                Dir::R => pos.1..*cols,
+            };
+
+            match dir {
+                Dir::U | Dir::D => visited.extend(path.map(|row| (row, pos.1))),
+                Dir::L | Dir::R => visited.extend(path.map(|col| (pos.0, col))),
+            };
+
+            break;
+        }
     }
+
+    visited.len()
 }
 
-fn check<const CONCAT: bool>(res: u64, acc: u64, numbers: &[u64]) -> bool {
-    if numbers.is_empty() {
-        return res == acc;
-    }
-
-    let head = numbers[0];
-    let rest = &numbers[1..];
-
-    let add = acc + head;
-    if add <= res && check::<CONCAT>(res, add, rest) {
-        return true;
-    }
-
-    let mul = acc * head;
-    if mul <= res && check::<CONCAT>(res, mul, rest) {
-        return true;
-    }
-
-    CONCAT && {
-        let con = concat(acc, head);
-        con <= res && check::<CONCAT>(res, con, rest)
-    }
-}
-
-fn solve_a(data: &Input) -> u64 {
-    data.iter()
-        .filter_map(
-            |&(result, ref numbers)| match check::<false>(result, 0, numbers) {
-                true => Some(result),
-                false => None,
-            },
-        )
-        .sum()
-}
-
-fn solve_b(data: &Input) -> u64 {
-    data.iter()
-        .filter_map(
-            |&(result, ref numbers)| match check::<true>(result, 0, numbers) {
-                true => Some(result),
-                false => None,
-            },
-        )
-        .sum()
+fn solve_b(b: &Input) -> usize {
+    2
 }
 
 #[cfg(test)]
@@ -89,32 +130,23 @@ mod test {
     use indoc::indoc;
 
     const SAMPLE: &str = indoc! {"
-        190: 10 19
-        3267: 81 40 27
-        83: 17 5
-        156: 15 6
-        7290: 6 8 6 15
-        161011: 16 10 13
-        192: 17 8 14
-        21037: 9 7 18 13
-        292: 11 6 16 20
+        ....#.....
+        .........#
+        ..........
+        ..#.......
+        .......#..
+        ..........
+        .#..^.....
+        ........#.
+        #.........
+        ......#...
     "};
 
     #[test]
     fn a() {
-        let parsed = parse(SAMPLE).unwrap();
-        let result = solve_a(&parsed);
+        let input = parse(SAMPLE).unwrap();
+        let result = solve_a(&input);
 
-        assert_eq!(result, 3749);
-    }
-
-    #[test]
-    fn b() {
-        assert_eq!(1234, concat(12, 34));
-
-        let parsed = parse(SAMPLE).unwrap();
-        let result = solve_b(&parsed);
-
-        assert_eq!(result, 11387);
+        assert_eq!(result, 41);
     }
 }
