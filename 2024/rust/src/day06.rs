@@ -2,7 +2,7 @@ use crate::advent::{day, Error};
 
 day!(7, parse, solve_a, solve_b);
 
-type Input = Vec<(i64, Vec<i64>)>;
+type Input = Vec<(u64, Vec<u64>)>;
 
 fn parse(text: &str) -> Result<Input, Error> {
     let mut data = vec![];
@@ -22,35 +22,65 @@ fn parse(text: &str) -> Result<Input, Error> {
     Ok(data)
 }
 
-fn check(res: i64, acc: i64, numbers: &[i64]) -> bool {
+#[allow(clippy::match_overlapping_arm)]
+fn concat(a: u64, b: u64) -> u64 {
+    match b {
+        ..10 => 10 * a + b,
+        ..100 => 100 * a + b,
+        ..1000 => 1000 * a + b,
+        ..10000 => 10000 * a + b,
+        ..100000 => 100000 * a + b,
+        ..1000000 => 1000000 * a + b,
+        ..10000000 => 10000000 * a + b,
+        ..100000000 => 100000000 * a + b,
+        _ => panic!(),
+    }
+}
+
+fn check<const CONCAT: bool>(res: u64, acc: u64, numbers: &[u64]) -> bool {
     if numbers.is_empty() {
         return res == acc;
     }
 
-    let a = {
-        let acc = acc + numbers[0];
-        acc <= res && check(res, acc, &numbers[1..])
-    };
+    let head = numbers[0];
+    let rest = &numbers[1..];
 
-    let b = {
-        let acc = acc * numbers[0];
-        acc <= res && check(res, acc, &numbers[1..])
-    };
+    let add = acc + head;
+    if add <= res && check::<CONCAT>(res, add, rest) {
+        return true;
+    }
 
-    a || b
+    let mul = acc * head;
+    if mul <= res && check::<CONCAT>(res, mul, rest) {
+        return true;
+    }
+
+    CONCAT && {
+        let con = concat(acc, head);
+        con <= res && check::<CONCAT>(res, con, rest)
+    }
 }
 
-fn solve_a(data: &Input) -> i64 {
+fn solve_a(data: &Input) -> u64 {
     data.iter()
-        .filter_map(|&(result, ref numbers)| match check(result, 0, numbers) {
-            true => Some(result),
-            false => None,
-        })
+        .filter_map(
+            |&(result, ref numbers)| match check::<false>(result, 0, numbers) {
+                true => Some(result),
+                false => None,
+            },
+        )
         .sum()
 }
 
-fn solve_b(b: &Input) -> usize {
-    2
+fn solve_b(data: &Input) -> u64 {
+    data.iter()
+        .filter_map(
+            |&(result, ref numbers)| match check::<true>(result, 0, numbers) {
+                true => Some(result),
+                false => None,
+            },
+        )
+        .sum()
 }
 
 #[cfg(test)]
@@ -76,5 +106,15 @@ mod test {
         let result = solve_a(&parsed);
 
         assert_eq!(result, 3749);
+    }
+
+    #[test]
+    fn b() {
+        assert_eq!(1234, concat(12, 34));
+
+        let parsed = parse(SAMPLE).unwrap();
+        let result = solve_b(&parsed);
+
+        assert_eq!(result, 11387);
     }
 }

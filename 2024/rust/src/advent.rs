@@ -63,7 +63,7 @@ pub use crate::__day as day;
 #[doc(hidden)]
 #[macro_export]
 macro_rules! __day {
-    ($day_num:expr, $parse:ident, $solve_a:ident, $solve_b:ident) => {
+    ($day_num:expr, $parse:expr, $solve_a:path, $solve_b:path) => {
         pub fn day() -> crate::advent::Day {
             crate::advent::mk_day($day_num, $parse, $solve_a, $solve_b)
         }
