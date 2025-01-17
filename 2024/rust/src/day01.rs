@@ -4,20 +4,22 @@ use std::mem::MaybeUninit;
 
 use crate::advent::{day, Error};
 
+day!(1, parse, solve_a, solve_b);
+
 type Input = (Vec<i32>, Vec<i32>);
 
 fn parse(text: &str) -> Result<Input, Error> {
-    let mut a = vec![];
-    let mut b = vec![];
+    let mut ls = vec![];
+    let mut rs = vec![];
 
     for line in text.lines() {
         let (l, r) = line.split_once("   ").ok_or("Missing separator")?;
 
-        a.push(l.parse()?);
-        b.push(r.parse()?);
+        ls.push(l.parse()?);
+        rs.push(r.parse()?);
     }
 
-    Ok((a, b))
+    Ok((ls, rs))
 }
 
 fn solve_a((ls, rs): &Input) -> i32 {
@@ -57,18 +59,42 @@ fn solve_a((ls, rs): &Input) -> i32 {
 }
 
 fn solve_b((ls, rs): &Input) -> i32 {
-    let mut counts = HashMap::<i32, i32>::new();
+    let mut counts = HashMap::new();
 
     for &r in rs {
         *counts.entry(r).or_insert(0) += 1;
     }
 
-    let mut result = 0;
-    for &l in ls {
-        result += l * counts.get(&l).unwrap_or(&0);
-    }
-
-    result
+    ls.into_iter()
+        .map(|l| l * counts.get(&l).unwrap_or(&0))
+        .sum()
 }
 
-day!(1, parse, solve_a, solve_b);
+#[cfg(test)]
+mod test {
+    use super::*;
+    use indoc::indoc;
+
+    const SAMPLE: &str = indoc! {"
+        3   4
+        4   3
+        2   5
+        1   3
+        3   9
+        3   3
+    "};
+
+    #[test]
+    fn a() {
+        let parsed = parse(SAMPLE).unwrap();
+        let result = solve_a(&parsed);
+        assert_eq!(result, 11);
+    }
+
+    #[test]
+    fn b() {
+        let parsed = parse(SAMPLE).unwrap();
+        let result = solve_b(&parsed);
+        assert_eq!(result, 31);
+    }
+}
