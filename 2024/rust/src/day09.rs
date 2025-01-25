@@ -94,16 +94,29 @@ fn solve_a(data: &Input) -> u64 {
     checksum
 }
 
-fn solve_b(data: &Input) -> u64 {
-    let mut iter = data.iter().copied();
-    let mut checksum = 0;
-    let mut idx = 0;
-    let mut checked = HashSet::new();
+fn find_fitting(list: &[Node], skip: &HashSet<u64>, hole: u64) -> Option<(u64, u64, usize)> {
+    for (offset, node) in list.iter().rev().enumerate() {
+        match node {
+            Node::File(size, id) if *size <= hole && !skip.contains(id) => {
+                return Some((*size, *id, offset))
+            }
+            _ => continue,
+        }
+    }
 
-    while let Some(next) = iter.next() {
-        match next {
+    None
+}
+
+fn solve_b(data: &Input) -> u64 {
+    let mut checksum = 0;
+    let mut skip = HashSet::new();
+    let mut lims = [data.len(); 10];
+    let mut idx = 0;
+
+    for (limit_s, node) in data.iter().enumerate() {
+        match node {
             Node::File(size, id) => {
-                if checked.contains(&id) {
+                if skip.contains(id) {
                     idx += size;
                     continue;
                 }
@@ -115,25 +128,32 @@ fn solve_b(data: &Input) -> u64 {
                 idx += size;
             }
             Node::Hole(mut hole) => {
-                let mut iterb = iter.clone();
+                while hole > 0 {
+                    let limit_e = &mut lims[hole as usize];
 
-                while let Some(next) = iterb.next_back() {
-                    match next {
-                        Node::File(size, id) if size <= hole && !checked.contains(&id) => {
+                    if *limit_e < limit_s {
+                        break;
+                    }
+
+                    // search area going from the end
+                    let slice = &data[limit_s..*limit_e];
+
+                    match find_fitting(slice, &skip, hole) {
+                        Some((size, id, offset)) => {
                             for ptr in idx..idx + size {
                                 checksum += ptr * id;
                             }
 
                             hole -= size;
                             idx += size;
-                            checked.insert(id);
-
-                            if hole == 0 {
-                                break;
-                            }
+                            skip.insert(id);
+                            *limit_e -= offset;
                         }
-                        _ => continue,
-                    }
+                        None => {
+                            *limit_e = 0;
+                            break;
+                        }
+                    };
                 }
 
                 idx += hole;
