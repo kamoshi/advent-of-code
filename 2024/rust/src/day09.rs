@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use crate::advent::{day, Error};
 
 day!(9, parse, solve_a, solve_b);
@@ -92,8 +94,54 @@ fn solve_a(data: &Input) -> u64 {
     checksum
 }
 
-fn solve_b(data: &Input) -> u32 {
-    2
+fn solve_b(data: &Input) -> u64 {
+    let mut iter = data.iter().copied();
+    let mut checksum = 0;
+    let mut idx = 0;
+    let mut checked = HashSet::new();
+
+    while let Some(next) = iter.next() {
+        match next {
+            Node::File(size, id) => {
+                if checked.contains(&id) {
+                    idx += size;
+                    continue;
+                }
+
+                for ptr in idx..idx + size {
+                    checksum += ptr * id;
+                }
+
+                idx += size;
+            }
+            Node::Hole(mut hole) => {
+                let mut iterb = iter.clone();
+
+                while let Some(next) = iterb.next_back() {
+                    match next {
+                        Node::File(size, id) if size <= hole && !checked.contains(&id) => {
+                            for ptr in idx..idx + size {
+                                checksum += ptr * id;
+                            }
+
+                            hole -= size;
+                            idx += size;
+                            checked.insert(id);
+
+                            if hole == 0 {
+                                break;
+                            }
+                        }
+                        _ => continue,
+                    }
+                }
+
+                idx += hole;
+            }
+        }
+    }
+
+    checksum
 }
 
 #[cfg(test)]
@@ -113,11 +161,11 @@ mod test {
         assert_eq!(result, 1928);
     }
 
-    // #[test]
-    // fn b() {
-    //     let parsed = parse(SAMPLE).unwrap();
-    //     let result = solve_b(&parsed);
+    #[test]
+    fn b() {
+        let parsed = parse(SAMPLE).unwrap();
+        let result = solve_b(&parsed);
 
-    //     assert_eq!(result, 11387);
-    // }
+        assert_eq!(result, 2858);
+    }
 }
