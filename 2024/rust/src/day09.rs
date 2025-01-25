@@ -12,6 +12,24 @@ enum Node {
     Hole(u64),
 }
 
+const CHECKSUM_LUT: [u64; 11] = [
+    0,
+    0,
+    1,
+    2 + 1,
+    3 + 2 + 1,
+    4 + 3 + 2 + 1,
+    5 + 4 + 3 + 2 + 1,
+    6 + 5 + 4 + 3 + 2 + 1,
+    7 + 6 + 5 + 4 + 3 + 2 + 1,
+    8 + 7 + 6 + 5 + 4 + 3 + 2 + 1,
+    9 + 8 + 7 + 6 + 5 + 4 + 3 + 2 + 1,
+];
+
+fn calc_checksum(offset: u64, size: u64, id: u64) -> u64 {
+    (offset * size + CHECKSUM_LUT[size as usize]) * id
+}
+
 fn parse(text: &str) -> Result<Input, Error> {
     let mut buffer = Vec::with_capacity(text.len());
 
@@ -38,10 +56,7 @@ fn solve_a(data: &Input) -> u64 {
     while let Some(next) = iter.next() {
         match next {
             Node::File(size, id) => {
-                for ptr in idx..idx + size {
-                    checksum += ptr * id;
-                }
-
+                checksum += calc_checksum(idx, size, id);
                 idx += size;
             }
             Node::Hole(mut hole) => {
@@ -61,10 +76,7 @@ fn solve_a(data: &Input) -> u64 {
 
                     // if there is more blocks than hole
                     if left > hole {
-                        for ptr in idx..idx + hole {
-                            checksum += ptr * id;
-                        }
-
+                        checksum += calc_checksum(idx, hole, id);
                         leftover = Some((left - hole, id));
                         idx += hole;
                         hole = 0;
@@ -72,10 +84,7 @@ fn solve_a(data: &Input) -> u64 {
                     }
 
                     // fill hole with whatever we have right now
-                    for ptr in idx..idx + left {
-                        checksum += ptr * id;
-                    }
-
+                    checksum += calc_checksum(idx, left, id);
                     leftover = None;
                     idx += left;
                     hole -= left;
@@ -86,9 +95,7 @@ fn solve_a(data: &Input) -> u64 {
 
     // flush leftover blocks
     if let Some((left, id)) = leftover {
-        for ptr in idx..idx + left {
-            checksum += ptr * id;
-        }
+        checksum += calc_checksum(idx, left, id);
     }
 
     checksum
@@ -114,17 +121,14 @@ fn solve_b(data: &Input) -> u64 {
     let mut idx = 0;
 
     for (limit_s, node) in data.iter().enumerate() {
-        match node {
+        match *node {
             Node::File(size, id) => {
-                if skip.contains(id) {
+                if skip.contains(&id) {
                     idx += size;
                     continue;
                 }
 
-                for ptr in idx..idx + size {
-                    checksum += ptr * id;
-                }
-
+                checksum += calc_checksum(idx, size, id);
                 idx += size;
             }
             Node::Hole(mut hole) => {
@@ -140,10 +144,7 @@ fn solve_b(data: &Input) -> u64 {
 
                     match find_fitting(slice, &skip, hole) {
                         Some((size, id, offset)) => {
-                            for ptr in idx..idx + size {
-                                checksum += ptr * id;
-                            }
-
+                            checksum += calc_checksum(idx, size, id);
                             hole -= size;
                             idx += size;
                             skip.insert(id);
