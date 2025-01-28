@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use crate::advent::{day, Error};
 
@@ -8,7 +8,7 @@ type Point = (usize, usize);
 type Casts = Box<[Vec<Point>]>;
 type Input = (Point, Point, Casts, Casts);
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 enum Dir {
     U,
     D,
@@ -132,8 +132,117 @@ fn solve_a(input: &Input) -> usize {
     visited.len()
 }
 
+fn check_cycle(
+    (_, _, cast_rows, cast_cols): &Input,
+    before: Point,
+    insert: Point,
+    dir: Dir,
+) -> bool {
+    let mut pos = before;
+    let mut dir = dir.turn_right();
+    let mut targets = HashSet::new();
+
+    // println!("{:?} {:?} {:?}", before, insert, dir);
+    loop {
+        let casts = match dir {
+            Dir::L | Dir::R => cast_rows[pos.0].as_slice(),
+            Dir::U | Dir::D => cast_cols[pos.1].as_slice(),
+        };
+
+        let hit = match dir {
+            Dir::U => casts.iter().rev().find(|p| p.0 < pos.0),
+            Dir::D => casts.iter().find(|p| p.0 > pos.0),
+            Dir::L => casts.iter().rev().find(|p| p.1 < pos.1),
+            Dir::R => casts.iter().find(|p| p.1 > pos.1),
+        };
+
+        let insert_valid = match dir {
+            Dir::U => insert.0 < pos.0 && insert.1 == pos.1,
+            Dir::D => insert.0 > pos.0 && insert.1 == pos.1,
+            Dir::L => insert.1 < pos.1 && insert.0 == pos.0,
+            Dir::R => insert.1 > pos.1 && insert.0 == pos.0,
+        };
+
+        let hit = match hit {
+            Some(hit) if insert_valid => {
+                if match dir {
+                    Dir::U => insert.0 > hit.0,
+                    Dir::D => insert.0 < hit.0,
+                    Dir::L => insert.1 > hit.1,
+                    Dir::R => insert.1 < hit.1,
+                } {
+                    insert
+                } else {
+                    *hit
+                }
+            }
+            Some(hit) => *hit,
+            None if insert_valid => insert,
+            None => return false,
+        };
+
+        let target = match dir {
+            Dir::U => (hit.0 + 1, hit.1),
+            Dir::D => (hit.0 - 1, hit.1),
+            Dir::L => (hit.0, hit.1 + 1),
+            Dir::R => (hit.0, hit.1 - 1),
+        };
+
+        // println!("{} {:?} {:?} {:?}", insert_valid, hit, target, dir);
+        // println!("{:?} {:?}", targets_temp.get(&target), Some(&dir));
+        if targets.contains(&(target, dir)) {
+            return true;
+        };
+
+        targets.insert((target, dir));
+
+        pos = target;
+        dir = dir.turn_right();
+    }
+}
+
+fn interpolate(a: usize, b: usize) -> Box<dyn Iterator<Item = usize>> {
+    if b < a {
+        Box::new((b..=a).rev())
+    } else {
+        Box::new(a..=b)
+    }
+}
+
 fn solve_b(input: &Input) -> usize {
-    2
+    let mut inserts = HashSet::<Point>::new();
+
+    let mut before = input.0;
+    for (dir, pos, target) in find_segments(input) {
+        match dir {
+            Dir::U | Dir::D => {
+                for point in interpolate(pos.0, target.0).map(|row| (row, pos.1)) {
+                    // assume the point blocks
+                    let is_cycle = check_cycle(input, before, point, dir);
+                    // println!("checking {:?} {}", before, is_cycle);
+                    if is_cycle {
+                        inserts.insert(point);
+                    }
+
+                    before = point;
+                }
+            }
+            Dir::L | Dir::R => {
+                for point in interpolate(pos.1, target.1).map(|col| (pos.0, col)) {
+                    // assume the point blocks
+                    let is_cycle = check_cycle(input, before, point, dir);
+                    // println!("checking {:?} {}", before, is_cycle);
+
+                    if is_cycle {
+                        inserts.insert(point);
+                    }
+                    before = point;
+                }
+            }
+        };
+    }
+
+    inserts.len()
 }
 
 #[cfg(test)]
