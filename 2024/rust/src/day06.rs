@@ -5,8 +5,8 @@ use crate::advent::{day, Error};
 day!(6, parse, solve_a, solve_b);
 
 type Point = (usize, usize);
-type Cache = Box<[Vec<Point>]>;
-type Input = (Point, Point, Cache, Cache);
+type Casts = Box<[Vec<Point>]>;
+type Input = (Point, Point, Casts, Casts);
 
 enum Dir {
     U,
@@ -45,60 +45,58 @@ fn parse(text: &str) -> Result<Input, Error> {
         }
     }
 
-    let mut hash_rows: Cache = Box::from(vec![vec![]; rows]);
-    let mut hash_cols: Cache = Box::from(vec![vec![]; cols]);
+    let mut cast_rows: Casts = Box::from(vec![vec![]; rows]);
+    let mut cast_cols: Casts = Box::from(vec![vec![]; cols]);
 
     for point @ (row, col) in desks {
-        hash_rows[row].push(point);
-        hash_cols[col].push(point);
+        cast_rows[row].push(point);
+        cast_cols[col].push(point);
     }
 
-    Ok((guard, (rows, cols), hash_rows, hash_cols))
+    Ok((guard, (rows, cols), cast_rows, cast_cols))
 }
 
-fn solve_a((guard, (rows, cols), hash_rows, hash_cols): &Input) -> usize {
+fn solve_a((guard, (rows, cols), cast_rows, cast_cols): &Input) -> usize {
     let mut pos = *guard;
     let mut dir = Dir::U;
 
     let mut visited = HashSet::<Point>::from_iter([pos]);
 
     loop {
-        let desks = match dir {
-            Dir::L | Dir::R => hash_rows[pos.0].as_slice(),
-            Dir::U | Dir::D => hash_cols[pos.1].as_slice(),
+        let casts = match dir {
+            Dir::L | Dir::R => cast_rows[pos.0].as_slice(),
+            Dir::U | Dir::D => cast_cols[pos.1].as_slice(),
         };
 
-        let first = match dir {
-            Dir::U => desks.iter().rev().find(|p| p.0 < pos.0),
-            Dir::D => desks.iter().find(|p| p.0 > pos.0),
-            Dir::L => desks.iter().rev().find(|p| p.1 < pos.1),
-            Dir::R => desks.iter().find(|p| p.1 > pos.1),
+        let hit = match dir {
+            Dir::U => casts.iter().rev().find(|p| p.0 < pos.0),
+            Dir::D => casts.iter().find(|p| p.0 > pos.0),
+            Dir::L => casts.iter().rev().find(|p| p.1 < pos.1),
+            Dir::R => casts.iter().find(|p| p.1 > pos.1),
         };
 
-        if let Some(first) = first {
-            let (step_row, step_col) = match dir {
-                Dir::U => (-1, 0),
-                Dir::D => (1, 0),
-                Dir::L => (0, -1),
-                Dir::R => (0, 1),
+        if let Some(hit) = hit {
+            let target = match dir {
+                Dir::U => (hit.0 + 1, hit.1),
+                Dir::D => (hit.0 - 1, hit.1),
+                Dir::L => (hit.0, hit.1 + 1),
+                Dir::R => (hit.0, hit.1 - 1),
             };
 
-            let mut curr = pos;
-            loop {
-                let next = (
-                    (curr.0 as isize + step_row) as usize,
-                    (curr.1 as isize + step_col) as usize,
-                );
-
-                if next == (first.0, first.1) {
-                    break;
+            match dir {
+                Dir::U | Dir::D => {
+                    let s = pos.0.min(target.0);
+                    let e = pos.0.max(target.0);
+                    visited.extend((s..=e).map(|row| (row, pos.1)));
                 }
+                Dir::L | Dir::R => {
+                    let s = pos.1.min(target.1);
+                    let e = pos.1.max(target.1);
+                    visited.extend((s..=e).map(|col| (pos.0, col)));
+                }
+            };
 
-                curr = next;
-                visited.insert(curr);
-            }
-
-            pos = curr;
+            pos = target;
             dir = dir.turn_right();
         } else {
             let path = match dir {
