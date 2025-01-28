@@ -8,6 +8,7 @@ type Point = (usize, usize);
 type Casts = Box<[Vec<Point>]>;
 type Input = (Point, Point, Casts, Casts);
 
+#[derive(Clone, Copy)]
 enum Dir {
     U,
     D,
@@ -56,13 +57,18 @@ fn parse(text: &str) -> Result<Input, Error> {
     Ok((guard, (rows, cols), cast_rows, cast_cols))
 }
 
-fn solve_a((guard, (rows, cols), cast_rows, cast_cols): &Input) -> usize {
-    let mut pos = *guard;
+fn find_segments(
+    (start, (rows, cols), cast_rows, cast_cols): &Input,
+) -> impl Iterator<Item = (Dir, Point, Point)> + '_ {
+    let mut pos = *start;
     let mut dir = Dir::U;
+    let mut end = false;
 
-    let mut visited = HashSet::<Point>::from_iter([pos]);
+    std::iter::from_fn(move || {
+        if end {
+            return None;
+        }
 
-    loop {
         let casts = match dir {
             Dir::L | Dir::R => cast_rows[pos.0].as_slice(),
             Dir::U | Dir::D => cast_cols[pos.1].as_slice(),
@@ -83,42 +89,50 @@ fn solve_a((guard, (rows, cols), cast_rows, cast_cols): &Input) -> usize {
                 Dir::R => (hit.0, hit.1 - 1),
             };
 
-            match dir {
-                Dir::U | Dir::D => {
-                    let s = pos.0.min(target.0);
-                    let e = pos.0.max(target.0);
-                    visited.extend((s..=e).map(|row| (row, pos.1)));
-                }
-                Dir::L | Dir::R => {
-                    let s = pos.1.min(target.1);
-                    let e = pos.1.max(target.1);
-                    visited.extend((s..=e).map(|col| (pos.0, col)));
-                }
-            };
+            let segment = (dir, pos, target);
 
             pos = target;
             dir = dir.turn_right();
+
+            Some(segment)
         } else {
-            let path = match dir {
-                Dir::U => 0..pos.0,
-                Dir::D => pos.0..*rows,
-                Dir::L => 0..pos.1,
-                Dir::R => pos.1..*cols,
+            let path_end = match dir {
+                Dir::U => (0, pos.1),
+                Dir::D => (*rows - 1, pos.1),
+                Dir::L => (pos.0, 0),
+                Dir::R => (pos.0, *cols - 1),
             };
 
-            match dir {
-                Dir::U | Dir::D => visited.extend(path.map(|row| (row, pos.1))),
-                Dir::L | Dir::R => visited.extend(path.map(|col| (pos.0, col))),
-            };
+            end = true;
 
-            break;
+            Some((dir, pos, path_end))
         }
+    })
+}
+
+fn solve_a(input: &Input) -> usize {
+    let mut visited = HashSet::<Point>::new();
+    visited.insert(input.0);
+
+    for (dir, pos, target) in find_segments(input) {
+        match dir {
+            Dir::U | Dir::D => {
+                let s = pos.0.min(target.0);
+                let e = pos.0.max(target.0);
+                visited.extend((s..=e).map(|row| (row, pos.1)));
+            }
+            Dir::L | Dir::R => {
+                let s = pos.1.min(target.1);
+                let e = pos.1.max(target.1);
+                visited.extend((s..=e).map(|col| (pos.0, col)));
+            }
+        };
     }
 
     visited.len()
 }
 
-fn solve_b(b: &Input) -> usize {
+fn solve_b(input: &Input) -> usize {
     2
 }
 
@@ -142,9 +156,17 @@ mod test {
 
     #[test]
     fn a() {
-        let input = parse(SAMPLE).unwrap();
-        let result = solve_a(&input);
+        let parsed = parse(SAMPLE).unwrap();
+        let result = solve_a(&parsed);
 
         assert_eq!(result, 41);
+    }
+
+    #[test]
+    fn b() {
+        let parsed = parse(SAMPLE).unwrap();
+        let result = solve_b(&parsed);
+
+        assert_eq!(result, 6);
     }
 }
