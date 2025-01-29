@@ -1,5 +1,3 @@
-use std::collections::{HashMap, HashSet};
-
 use crate::advent::{day, Error};
 
 day!(6, parse, solve_a, solve_b);
@@ -8,12 +6,13 @@ type Point = (usize, usize);
 type Casts = Box<[Vec<Point>]>;
 type Input = (Point, Point, Casts, Casts);
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
+#[repr(u8)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 enum Dir {
-    U,
-    D,
-    L,
-    R,
+    U = 1 << 0,
+    D = 1 << 1,
+    L = 1 << 2,
+    R = 1 << 3,
 }
 
 impl Dir {
@@ -110,39 +109,44 @@ fn find_segments(
     })
 }
 
-fn solve_a(input: &Input) -> usize {
-    let mut visited = HashSet::<Point>::new();
-    visited.insert(input.0);
+fn interpolate(a: usize, b: usize) -> Box<dyn Iterator<Item = usize>> {
+    if b < a {
+        Box::new((b..=a).rev())
+    } else {
+        Box::new(a..=b)
+    }
+}
 
-    for (dir, pos, target) in find_segments(input) {
-        match dir {
-            Dir::U | Dir::D => {
-                let s = pos.0.min(target.0);
-                let e = pos.0.max(target.0);
-                visited.extend((s..=e).map(|row| (row, pos.1)));
-            }
-            Dir::L | Dir::R => {
-                let s = pos.1.min(target.1);
-                let e = pos.1.max(target.1);
-                visited.extend((s..=e).map(|col| (pos.0, col)));
-            }
+fn solve_a(input @ (start, (rows, cols), _, _): &Input) -> usize {
+    let mut visited = vec![false; rows * cols];
+    visited[start.0 * cols + start.1] = true;
+
+    for (dir, (s_row, s_col), (e_row, e_col)) in find_segments(input) {
+        let points: Box<dyn Iterator<Item = Point>> = match dir {
+            Dir::U | Dir::D => Box::new(interpolate(s_row, e_row).map(|row| (row, s_col))),
+            Dir::L | Dir::R => Box::new(interpolate(s_col, e_col).map(|col| (s_row, col))),
         };
+
+        for (row, col) in points {
+            visited[row * cols + col] = true;
+        }
     }
 
-    visited.len()
+    visited.into_iter().filter(|b| *b).count()
 }
 
 fn check_cycle(
-    (_, _, cast_rows, cast_cols): &Input,
+    (_, (_, cols), cast_rows, cast_cols): &Input,
+    temp: &mut [u8],
     before: Point,
     insert: Point,
     dir: Dir,
 ) -> bool {
+    temp.fill(0);
+
     let mut pos = before;
     let mut dir = dir.turn_right();
-    let mut targets = HashSet::new();
 
-    // println!("{:?} {:?} {:?}", before, insert, dir);
     loop {
         let casts = match dir {
             Dir::L | Dir::R => cast_rows[pos.0].as_slice(),
@@ -188,61 +192,48 @@ fn check_cycle(
             Dir::R => (hit.0, hit.1 - 1),
         };
 
-        // println!("{} {:?} {:?} {:?}", insert_valid, hit, target, dir);
-        // println!("{:?} {:?}", targets_temp.get(&target), Some(&dir));
-        if targets.contains(&(target, dir)) {
+        let cell = &mut temp[target.0 * cols + target.1];
+
+        if *cell & dir as u8 != 0 {
             return true;
         };
 
-        targets.insert((target, dir));
+        *cell |= dir as u8;
 
         pos = target;
         dir = dir.turn_right();
     }
 }
 
-fn interpolate(a: usize, b: usize) -> Box<dyn Iterator<Item = usize>> {
-    if b < a {
-        Box::new((b..=a).rev())
-    } else {
-        Box::new(a..=b)
-    }
-}
+fn solve_b(input @ (start, (rows, cols), _, _): &Input) -> usize {
+    let mut visited = vec![false; rows * cols];
+    let mut inserts = vec![false; rows * cols];
 
-fn solve_b(input: &Input) -> usize {
-    let mut inserts = HashSet::<Point>::new();
-
-    let mut before = input.0;
-    for (dir, pos, target) in find_segments(input) {
-        match dir {
-            Dir::U | Dir::D => {
-                for point in interpolate(pos.0, target.0).map(|row| (row, pos.1)) {
-                    // assume the point blocks
-                    let is_cycle = check_cycle(input, before, point, dir);
-                    // println!("checking {:?} {}", before, is_cycle);
-                    if is_cycle {
-                        inserts.insert(point);
-                    }
-
-                    before = point;
-                }
-            }
-            Dir::L | Dir::R => {
-                for point in interpolate(pos.1, target.1).map(|col| (pos.0, col)) {
-                    // assume the point blocks
-                    let is_cycle = check_cycle(input, before, point, dir);
-                    // println!("checking {:?} {}", before, is_cycle);
-
-                    if is_cycle {
-                        inserts.insert(point);
-                    }
-                    before = point;
-                }
-            }
+    let mut temp = vec![0; rows * cols];
+    let mut curr = *start;
+    for (dir, (s_row, s_col), (e_row, e_col)) in find_segments(input) {
+        let points: Box<dyn Iterator<Item = Point>> = match dir {
+            Dir::U | Dir::D => Box::new(interpolate(s_row, e_row).map(|row| (row, s_col))),
+            Dir::L | Dir::R => Box::new(interpolate(s_col, e_col).map(|col| (s_row, col))),
         };
+
+        for next in points {
+            let visited = &mut visited[next.0 * cols + next.1];
+            let inserts = &mut inserts[next.0 * cols + next.1];
+
+            if !*visited {
+                // assume the point blocks
+                if check_cycle(input, &mut temp, curr, next, dir) {
+                    *inserts = true;
+                }
+            }
+
+            *visited = true;
+            curr = next;
+        }
     }
 
-    inserts.len()
+    inserts.into_iter().filter(|b| *b).count()
 }
 
 #[cfg(test)]
