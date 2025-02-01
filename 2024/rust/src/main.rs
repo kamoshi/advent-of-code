@@ -11,6 +11,7 @@ mod day05;
 mod day06;
 mod day07;
 mod day09;
+mod day11;
 mod day12;
 
 fn days() -> impl IntoIterator<Item = Day> {
@@ -22,6 +23,7 @@ fn days() -> impl IntoIterator<Item = Day> {
         day06::day(),
         day07::day(),
         day09::day(),
+        day11::day(),
         day12::day(),
     ]
 }
