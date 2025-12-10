@@ -1,17 +1,22 @@
 #![feature(test)]
 
-use std::time::Instant;
 mod day01;
+mod day02;
+mod day03;
+mod day06;
+mod day10;
 
-const I1: &str = include_str!("../input");
+use std::time::Instant;
+
+// const I: &str = include_str!("../../.data/06");
 
 fn main() {
     let start = Instant::now();
 
-    let res = day01::solve(I1);
+    // let res = day06::solve(I);
 
     let duration = start.elapsed();
 
-    println!("Result: {:?}", res);
+    // println!("Result: {:?}", res);
     println!("Time elapsed: {:?}", duration);
 }

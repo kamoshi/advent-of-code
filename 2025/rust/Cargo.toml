@@ -4,4 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+good_lp = { version = "1", features = ["minilp"], default-features = false }
+
+[dev-dependencies]
 indoc = "2"
